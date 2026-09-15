@@ -20,6 +20,18 @@ describe('validateEnvironment', () => {
     expect(result.PORT).toBe(3000);
     expect(result.CLUB_TIMEZONE).toBe('Africa/Lagos');
     expect(result.SESSION_SECRET).toBe('secure-session-secret-string');
+    expect(result.FRONTEND_URL).toBe('http://localhost:5173');
+  });
+
+  it('should normalize FRONTEND_URL without protocol and strip trailing slashes', () => {
+    const configWithRawUrl = {
+      ...validConfig,
+      FRONTEND_URL: 'outreach-and-attendance-system-m1os.vercel.app/',
+    };
+    const result = validateEnvironment(configWithRawUrl);
+    expect(result.FRONTEND_URL).toBe(
+      'https://outreach-and-attendance-system-m1os.vercel.app',
+    );
   });
 
   it('should throw an error if required environment variables are missing', () => {

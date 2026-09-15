@@ -16,6 +16,7 @@ export class GoogleAuthGuard extends AuthGuard('google') {
   getAuthenticateOptions(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
     return {
+      prompt: 'select_account',
       state: (request.query?.state as string) || undefined,
     };
   }

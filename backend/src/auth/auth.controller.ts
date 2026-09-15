@@ -111,35 +111,37 @@ export class AuthController {
     description: 'Session invalidated and cookie cleared',
   })
   logout(@Req() req: Request, @Res() res: Response): void {
-    req.logout((err) => {
-      if (err) {
-        throw new InternalServerErrorException('Failed to logout');
-      }
+    this.handleLogout(req, res);
+  }
 
-      const finishLogout = () => {
-        const isProd =
-          this.configService.get<string>('NODE_ENV') === 'production';
-        res.clearCookie('uijudo.sid', {
-          httpOnly: true,
-          sameSite: isProd ? 'none' : 'lax',
-          secure: isProd,
-        });
+  @Get('logout')
+  @ApiOperation({ summary: 'Log out and invalidate user session via GET' })
+  logoutGet(@Req() req: Request, @Res() res: Response): void {
+    this.handleLogout(req, res);
+  }
 
-        res.json({
-          success: true,
-          data: { message: 'Logged out successfully' },
-        });
-      };
+  private handleLogout(req: Request, res: Response): void {
+    const finish = () => {
+      const isProd =
+        this.configService.get<string>('NODE_ENV') === 'production';
+      res.clearCookie('uijudo.sid', {
+        path: '/',
+        httpOnly: true,
+        sameSite: isProd ? 'none' : 'lax',
+        secure: isProd,
+      });
 
+      res.json({
+        success: true,
+        data: { message: 'Logged out successfully' },
+      });
+    };
+
+    req.logout(() => {
       if (req.session) {
-        req.session.destroy((sessionErr) => {
-          if (sessionErr) {
-            throw new InternalServerErrorException('Failed to destroy session');
-          }
-          finishLogout();
-        });
+        req.session.destroy(() => finish());
       } else {
-        finishLogout();
+        finish();
       }
     });
   }

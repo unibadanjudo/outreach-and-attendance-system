@@ -1,4 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+export const BASE_URL = rawBase.endsWith('/api')
+  ? rawBase
+  : rawBase === '' || rawBase === '/'
+    ? '/api'
+    : `${rawBase.replace(/\/+$/, '')}/api`;
 
 export interface ApiResponse<T> {
   success: boolean;

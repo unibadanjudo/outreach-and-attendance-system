@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, BASE_URL } from './client';
 import type { AuthStatusResponse, UserSession } from '../types';
 
 export const authApi = {
@@ -6,7 +6,6 @@ export const authApi = {
   getProfile: () => api.get<UserSession>('/auth/profile'),
   logout: () => api.post<{ message: string }>('/auth/logout'),
   getGoogleLoginUrl: () => {
-    const base = import.meta.env.VITE_API_BASE_URL || '/api';
-    return `${base}/auth/google`;
+    return `${BASE_URL}/auth/google`;
   },
 };

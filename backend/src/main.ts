@@ -26,6 +26,10 @@ async function bootstrap() {
   // Global Prefix
   app.setGlobalPrefix('api');
 
+  // Trust reverse proxy for secure cookies on Render/Vercel
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', 1);
+
   // CORS Configuration
   const isProduction = nodeEnv === 'production';
   const allowedOrigins = isProduction

@@ -1,4 +1,4 @@
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsNotEmpty,
@@ -26,6 +26,14 @@ export class EnvironmentVariables {
   @IsOptional()
   NODE_ENV: Environment = Environment.Development;
 
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') return value;
+    let url = value.trim().replace(/\/+$/, '');
+    if (url && !/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+    return url;
+  })
   @IsString()
   @IsNotEmpty()
   FRONTEND_URL: string = 'http://localhost:5173';
