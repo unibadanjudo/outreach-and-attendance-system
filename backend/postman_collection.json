@@ -1,0 +1,1221 @@
+{
+  "info": {
+    "_postman_id": "uijudo-club-api-collection-v1",
+    "name": "UI Judo Club Attendance & Outreach API",
+    "description": "API collection for the University of Ibadan Judo Club Attendance and Member Outreach System.\n\n### Authentication\nEndpoints marked with 🔒 require an active session cookie (`uijudo.sid`).\nLog in via Google OAuth (`/api/auth/google`) or send the session cookie with your requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "memberId",
+      "value": "08011112222",
+      "type": "string"
+    },
+    {
+      "key": "attendanceId",
+      "value": "att_1726214400000_abc123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Returns basic service health status, environment mode, and uptime."
+          },
+          "response": [
+            {
+              "name": "Health Check - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"status\": \"ok\",\n    \"timestamp\": \"2026-09-13T07:30:00.000Z\",\n    \"uptime\": 142.5,\n    \"environment\": \"development\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Initiate Google OAuth (Open in Browser)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const location = pm.response.headers.get('Location') || (pm.variables.get('baseUrl') + '/api/auth/google?state=postman');",
+                  "",
+                  "pm.variables.set('googleAuthUrl', location);",
+                  "",
+                  "pm.visualizer.set(`",
+                  "  <!DOCTYPE html>",
+                  "  <html>",
+                  "  <head>",
+                  "    <meta charset=\"utf-8\">",
+                  "    <style>",
+                  "      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 85vh; margin: 0; padding: 20px; }",
+                  "      .card { background: #1e293b; padding: 36px 32px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; max-width: 520px; border: 1px solid #334155; }",
+                  "      .icon { font-size: 40px; margin-bottom: 12px; }",
+                  "      h2 { color: #38bdf8; margin: 0 0 10px 0; font-size: 22px; }",
+                  "      p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 8px 0; }",
+                  "      .btn { display: inline-block; margin-top: 18px; background: #2563eb; color: #ffffff; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }",
+                  "      .btn:hover { background: #1d4ed8; }",
+                  "      .info { margin-top: 24px; background: #0f172a; padding: 14px; border-radius: 6px; text-align: left; font-size: 12px; color: #cbd5e1; border: 1px solid #334155; }",
+                  "      .step { margin-bottom: 6px; }",
+                  "      code { color: #38bdf8; background: #1e293b; padding: 2px 5px; border-radius: 4px; }",
+                  "    </style>",
+                  "  </head>",
+                  "  <body>",
+                  "    <div class=\"card\">",
+                  "      <div class=\"icon\">🥋</div>",
+                  "      <h2>Google OAuth Sign-In</h2>",
+                  "      <p>Google authentication requires interactive consent in your web browser.</p>",
+                  "      <a id=\"browserBtn\" class=\"btn\" href=\"${location}\" target=\"_blank\">🌐 Authenticate in Browser</a>",
+                  "      <div class=\"info\">",
+                  "        <div class=\"step\"><strong>1.</strong> Click the button above to launch Google login in your browser.</div>",
+                  "        <div class=\"step\"><strong>2.</strong> Log in with an authorized email (e.g., <code>coach@uijudo.club</code>).</div>",
+                  "        <div class=\"step\"><strong>3.</strong> Google redirects to <code>/api/auth/google/callback</code> and sets your session cookie.</div>",
+                  "        <div class=\"step\"><strong>4.</strong> Return to Postman to execute protected endpoints!</div>",
+                  "      </div>",
+                  "    </div>",
+                  "    <script>",
+                  "      try {",
+                  "        const btn = document.getElementById('browserBtn');",
+                  "        if (btn) btn.click();",
+                  "      } catch (e) {",
+                  "        console.log('Popup blocked, click the button manually.');",
+                  "      }",
+                  "    </script>",
+                  "  </body>",
+                  "  </html>",
+                  "`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/google?state=postman",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "google"],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "postman",
+                  "description": "Notifies backend callback to render a Postman-friendly browser success page"
+                }
+              ]
+            },
+            "description": "Initiates Google OAuth 2.0 flow. In Postman, click Send and inspect the 'Visualize' tab to open Google login in your system browser, or click the direct link."
+          },
+          "response": []
+        },
+        {
+          "name": "Dev Login (Instant Postman Session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"coach@uijudo.club\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/dev-login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "dev-login"]
+            },
+            "description": "Authenticates directly inside Postman by issuing the uijudo.sid session cookie directly into Postman's cookie jar. Only available in non-production environments."
+          },
+          "response": [
+            {
+              "name": "Dev Login - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Authenticated successfully in Postman session\",\n    \"user\": {\n      \"email\": \"coach@uijudo.club\",\n      \"name\": \"UI Coach (Dev Session)\",\n      \"role\": \"ADMIN\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Auth Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "status"]
+            },
+            "description": "Checks whether the current client holds a valid session without throwing a 401 error."
+          },
+          "response": [
+            {
+              "name": "Auth Status - Authenticated",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"isAuthenticated\": true,\n    \"user\": {\n      \"email\": \"coach@uijudo.club\",\n      \"name\": \"UI Coach\",\n      \"role\": \"ADMIN\"\n    }\n  }\n}"
+            },
+            {
+              "name": "Auth Status - Not Authenticated",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"isAuthenticated\": false,\n    \"user\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Current User Profile 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Retrieves the authenticated administrator/coach profile from the current session."
+          },
+          "response": [
+            {
+              "name": "Get Profile - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"email\": \"coach@uijudo.club\",\n    \"name\": \"UI Coach\",\n    \"role\": \"ADMIN\"\n  }\n}"
+            },
+            {
+              "name": "Get Profile - Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication required\",\n    \"timestamp\": \"2026-09-13T07:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Destroys the current server session and clears the HTTP-only `uijudo.sid` cookie."
+          },
+          "response": [
+            {
+              "name": "Logout - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out successfully\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "List Members (Paginated) 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (1-based)"
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of members per page (max 100)"
+                }
+              ]
+            },
+            "description": "Retrieves a paginated list of all Judo Club members adapted from the Google Form response sheet."
+          },
+          "response": [
+            {
+              "name": "List Members - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"mem_08011112222\",\n        \"firstName\": \"Jigoro\",\n        \"lastName\": \"Kano\",\n        \"otherNames\": \"Master\",\n        \"nickname\": \"Father of Judo\",\n        \"phoneNumber\": \"08011112222\",\n        \"facultyDepartment\": \"Education - Sports\",\n        \"matricNumber\": \"111111\",\n        \"dateOfBirth\": \"1860-10-28\",\n        \"judoStartDate\": \"1882-05-01\",\n        \"motivation\": \"Self Defense & Education\",\n        \"createdAt\": \"2026-01-01T10:00:00.000Z\",\n        \"updatedAt\": \"2026-01-01T10:00:00.000Z\"\n      }\n    ],\n    \"meta\": {\n      \"total\": 1,\n      \"page\": 1,\n      \"limit\": 50,\n      \"totalPages\": 1\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search Members 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members?search=Kano&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Kano",
+                  "description": "Search keyword across names, phone, matric, or faculty/department"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Performs multi-field fuzzy search across member names, nicknames, phone numbers, matric numbers, and faculty/department."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Members by Faculty/Department 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members?facultyDepartment=Science&page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members"],
+              "query": [
+                {
+                  "key": "facultyDepartment",
+                  "value": "Science",
+                  "description": "Filter members by faculty or department"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Filters members by faculty or department."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Member by ID / Phone / Matric 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/{{memberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "{{memberId}}"]
+            },
+            "description": "Retrieves a single member profile using Member ID (e.g. `mem_08011112222`), Phone Number (`08011112222`), or Matric Number (`111111`)."
+          },
+          "response": [
+            {
+              "name": "Get Member - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"mem_08011112222\",\n    \"firstName\": \"Jigoro\",\n    \"lastName\": \"Kano\",\n    \"otherNames\": \"Master\",\n    \"nickname\": \"Father of Judo\",\n    \"phoneNumber\": \"08011112222\",\n    \"facultyDepartment\": \"Education - Sports\",\n    \"matricNumber\": \"111111\",\n    \"dateOfBirth\": \"1860-10-28\",\n    \"judoStartDate\": \"1882-05-01\",\n    \"motivation\": \"Self Defense & Education\",\n    \"createdAt\": \"2026-01-01T10:00:00.000Z\",\n    \"updatedAt\": \"2026-01-01T10:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Get Member - Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"MEMBER_NOT_FOUND\",\n    \"message\": \"Member with identifier \\\"nonexistent\\\" not found.\",\n    \"timestamp\": \"2026-09-13T07:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Member Summary 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/{{memberId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "{{memberId}}", "summary"]
+            },
+            "description": "Retrieves the member's profile and engagement summary (prepared for attendance & outreach counts in upcoming stages)."
+          },
+          "response": [
+            {
+              "name": "Get Member Summary - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"member\": {\n      \"id\": \"mem_08011112222\",\n      \"firstName\": \"Jigoro\",\n      \"lastName\": \"Kano\",\n      \"otherNames\": \"Master\",\n      \"nickname\": \"Father of Judo\",\n      \"phoneNumber\": \"08011112222\",\n      \"facultyDepartment\": \"Education - Sports\",\n      \"matricNumber\": \"111111\",\n      \"dateOfBirth\": \"1860-10-28\",\n      \"judoStartDate\": \"1882-05-01\",\n      \"motivation\": \"Self Defense & Education\",\n      \"createdAt\": \"2026-01-01T10:00:00.000Z\",\n      \"updatedAt\": \"2026-01-01T10:00:00.000Z\"\n    },\n    \"attendanceCount\": 14,\n    \"lastAttendedDate\": \"2026-09-11\",\n    \"activityStatus\": \"ACTIVE\",\n    \"outreachCount\": 0,\n    \"lastOutreachDate\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Member Activity 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/{{memberId}}/activity",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "{{memberId}}", "activity"]
+            },
+            "description": "Returns detailed attendance analytics (7/30/60/90 days counts, last/prev attendance dates, frequency, trend) and activity status (ACTIVE, RECENTLY_INACTIVE, INACTIVE, LONG_TERM_INACTIVE, NEVER_ATTENDED)."
+          },
+          "response": [
+            {
+              "name": "Get Member Activity - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"memberId\": \"mem_08011112222\",\n    \"status\": \"ACTIVE\",\n    \"daysInactive\": 2,\n    \"analytics\": {\n      \"totalAttendance\": 14,\n      \"attendanceInLast7Days\": 2,\n      \"attendanceInLast30Days\": 6,\n      \"attendanceInLast60Days\": 10,\n      \"attendanceInLast90Days\": 14,\n      \"lastAttendanceDate\": \"2026-09-11\",\n      \"previousAttendanceDate\": \"2026-09-08\",\n      \"daysSinceLastAttendance\": 2,\n      \"attendanceFrequency\": 1.09,\n      \"recentAttendanceTrend\": \"INCREASING\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Record Attendance 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"attendanceDate\": \"2026-09-13\",\n  \"trainingSession\": \"Evening\",\n  \"status\": \"PRESENT\",\n  \"notes\": \"Strong randori session\",\n  \"isCorrection\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance"]
+            },
+            "description": "Records training attendance for a member in the dedicated Google Sheets tab.\n\n- Duplicate check: Same member + date + session rejects with 409 Conflict unless `isCorrection: true`.\n- `recordedBy` is automatically populated from the authenticated session user."
+          },
+          "response": [
+            {
+              "name": "Record Attendance - Created (201)",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"att_1726214400000_abc123\",\n    \"memberId\": \"08011112222\",\n    \"attendanceDate\": \"2026-09-13\",\n    \"trainingSession\": \"Evening\",\n    \"status\": \"PRESENT\",\n    \"recordedBy\": \"Sensei Coach <coach@uijudo.org>\",\n    \"notes\": \"Strong randori session\",\n    \"createdAt\": \"2026-09-13T17:30:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Record Attendance - Duplicate Conflict (409)",
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"ATTENDANCE_ALREADY_RECORDED\",\n    \"message\": \"Attendance already recorded for member 08011112222 on 2026-09-13 (Evening). Set isCorrection to true to overwrite or use PATCH /api/attendance/:id.\",\n    \"timestamp\": \"2026-09-13T17:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Attendance Records 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance?page=1&limit=20&status=PRESENT",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance"],
+              "query": [
+                {
+                  "key": "member",
+                  "value": "{{memberId}}",
+                  "disabled": true,
+                  "description": "Filter by member identifier (Phone, ID, or Matric)"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-09-13",
+                  "disabled": true,
+                  "description": "Filter by specific date (YYYY-MM-DD)"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-09-01",
+                  "disabled": true,
+                  "description": "Filter by start date of range (YYYY-MM-DD)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-09-30",
+                  "disabled": true,
+                  "description": "Filter by end date of range (YYYY-MM-DD)"
+                },
+                {
+                  "key": "session",
+                  "value": "Evening",
+                  "disabled": true,
+                  "description": "Filter by training session (Morning, Evening, etc.)"
+                },
+                {
+                  "key": "status",
+                  "value": "PRESENT",
+                  "description": "Filter by status: PRESENT, ABSENT, EXCUSED"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (defaults to 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Page size limit (defaults to 20, max 100)"
+                }
+              ]
+            },
+            "description": "Lists attendance records with flexible filtering by member, date, date range, session, and status."
+          },
+          "response": [
+            {
+              "name": "List Attendance - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"att_1726214400000_abc123\",\n        \"memberId\": \"08011112222\",\n        \"attendanceDate\": \"2026-09-13\",\n        \"trainingSession\": \"Evening\",\n        \"status\": \"PRESENT\",\n        \"recordedBy\": \"Sensei Coach <coach@uijudo.org>\",\n        \"notes\": \"Strong randori session\",\n        \"createdAt\": \"2026-09-13T17:30:00.000Z\"\n      }\n    ],\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Attendance Record by ID 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "{{attendanceId}}"]
+            },
+            "description": "Retrieves a single attendance record by its unique ID."
+          },
+          "response": [
+            {
+              "name": "Get Attendance - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"att_1726214400000_abc123\",\n    \"memberId\": \"08011112222\",\n    \"attendanceDate\": \"2026-09-13\",\n    \"trainingSession\": \"Evening\",\n    \"status\": \"PRESENT\",\n    \"recordedBy\": \"Sensei Coach <coach@uijudo.org>\",\n    \"notes\": \"Strong randori session\",\n    \"createdAt\": \"2026-09-13T17:30:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Get Attendance - Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"ATTENDANCE_NOT_FOUND\",\n    \"message\": \"Attendance record with ID \\\"att_nonexistent\\\" not found.\",\n    \"timestamp\": \"2026-09-13T17:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Attendance Record 🔒",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EXCUSED\",\n  \"notes\": \"Updated: Medical exemption provided\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "{{attendanceId}}"]
+            },
+            "description": "Updates an existing attendance record (e.g. status correction or note change)."
+          },
+          "response": [
+            {
+              "name": "Update Attendance - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"att_1726214400000_abc123\",\n    \"memberId\": \"08011112222\",\n    \"attendanceDate\": \"2026-09-13\",\n    \"trainingSession\": \"Evening\",\n    \"status\": \"EXCUSED\",\n    \"recordedBy\": \"Sensei Coach <coach@uijudo.org>\",\n    \"notes\": \"Updated: Medical exemption provided\",\n    \"createdAt\": \"2026-09-13T17:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Attendance Record 🔒",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "{{attendanceId}}"]
+            },
+            "description": "Removes an attendance record by ID (clears the row in Google Sheets)."
+          },
+          "response": [
+            {
+              "name": "Delete Attendance - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Attendance record att_1726214400000_abc123 deleted successfully.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Member Attendance History 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/{{memberId}}/attendance?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "{{memberId}}", "attendance"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Retrieves the historical attendance records for a specific member."
+          },
+          "response": [
+            {
+              "name": "Member Attendance History - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"att_1726214400000_abc123\",\n        \"memberId\": \"08011112222\",\n        \"attendanceDate\": \"2026-09-13\",\n        \"trainingSession\": \"Evening\",\n        \"status\": \"PRESENT\",\n        \"recordedBy\": \"Sensei Coach <coach@uijudo.org>\",\n        \"notes\": \"Strong randori session\",\n        \"createdAt\": \"2026-09-13T17:30:00.000Z\"\n      }\n    ],\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Summary 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "summary"]
+            },
+            "description": "Returns executive summary metrics across the Judo club including total members, active/inactive counts, outreach queue counts, recent attendance, and attendance trends."
+          },
+          "response": [
+            {
+              "name": "Dashboard Summary - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalMembers\": 45,\n    \"activeMembers\": 28,\n    \"recentlyInactiveMembers\": 7,\n    \"inactiveMembers\": 4,\n    \"longTermInactiveMembers\": 3,\n    \"neverAttendedMembers\": 3,\n    \"membersRequiringOutreach\": 14,\n    \"outreachCompleted\": 18,\n    \"outreachPending\": 6,\n    \"followUpsDue\": 2,\n    \"recentAttendance\": 84,\n    \"attendanceTrends\": {\n      \"increasing\": 12,\n      \"stable\": 16,\n      \"declining\": 8,\n      \"noAttendance\": 9\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Attendance Metrics 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/attendance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "attendance"]
+            },
+            "description": "Returns comprehensive attendance analytics: breakdown by status, breakdown by session, 14-day daily timeline, and average attendance per session."
+          },
+          "response": [
+            {
+              "name": "Attendance Metrics - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalRecords\": 150,\n    \"attendanceLast7Days\": 24,\n    \"attendanceLast30Days\": 98,\n    \"byStatus\": {\n      \"PRESENT\": 135,\n      \"ABSENT\": 10,\n      \"EXCUSED\": 5\n    },\n    \"bySession\": {\n      \"TUESDAY\": 65,\n      \"THURSDAY\": 70\n    },\n    \"dailyTimeline\": [\n      {\n        \"date\": \"2026-09-12\",\n        \"count\": 18\n      }\n    ],\n    \"averagePerSession\": 19.3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Outreach Metrics 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/outreach",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "outreach"]
+            },
+            "description": "Returns outreach performance analytics: channel usage, outcome status breakdown, follow-ups due, and member return-after-outreach conversion rate."
+          },
+          "response": [
+            {
+              "name": "Outreach Metrics - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalOutreach\": 32,\n    \"pendingOutreach\": 6,\n    \"completedOutreach\": 26,\n    \"followUpsDue\": 3,\n    \"byMethod\": {\n      \"WHATSAPP\": 18,\n      \"PHONE_CALL\": 10,\n      \"EMAIL\": 4\n    },\n    \"byStatus\": {\n      \"RESPONDED\": 12,\n      \"WILL_RETURN\": 8,\n      \"CONTACTED\": 6,\n      \"NO_RESPONSE\": 4,\n      \"NOT_INTERESTED\": 2\n    },\n    \"membersReturnedAfterOutreach\": 6,\n    \"conversionRate\": 23.1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Inactive Members 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/inactive-members?page=1&limit=50&sortBy=outreachRelevance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "inactive-members"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "RECENTLY_INACTIVE",
+                  "disabled": true,
+                  "description": "Filter by status: NEVER_ATTENDED, RECENTLY_INACTIVE, INACTIVE, LONG_TERM_INACTIVE"
+                },
+                {
+                  "key": "minDays",
+                  "value": "15",
+                  "disabled": true,
+                  "description": "Filter minimum days inactive"
+                },
+                {
+                  "key": "maxDays",
+                  "value": "60",
+                  "disabled": true,
+                  "description": "Filter maximum days inactive"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "outreachRelevance",
+                  "description": "Sort order: outreachRelevance, daysInactive, attendanceCount"
+                }
+              ]
+            },
+            "description": "Lists all inactive, recently inactive, and never-attended members. Ranked by outreach relevance by default (prioritizing freshest dropouts with high past attendance)."
+          },
+          "response": [
+            {
+              "name": "List Inactive Members - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"member\": {\n          \"id\": \"mem_08022222222\",\n          \"firstName\": \"Recent\",\n          \"lastName\": \"Inactive\",\n          \"phoneNumber\": \"08022222222\",\n          \"facultyDepartment\": \"Science\"\n        },\n        \"lastAttendance\": \"2026-08-24\",\n        \"daysInactive\": 20,\n        \"attendanceCount\": 15,\n        \"activityStatus\": \"RECENTLY_INACTIVE\",\n        \"priorityScore\": 10280\n      },\n      {\n        \"member\": {\n          \"id\": \"mem_08033333333\",\n          \"firstName\": \"Never\",\n          \"lastName\": \"Attended\",\n          \"phoneNumber\": \"08033333333\",\n          \"facultyDepartment\": \"Arts\"\n        },\n        \"lastAttendance\": null,\n        \"daysInactive\": null,\n        \"attendanceCount\": 0,\n        \"activityStatus\": \"NEVER_ATTENDED\",\n        \"priorityScore\": 2500\n      }\n    ],\n    \"total\": 2,\n    \"page\": 1,\n    \"limit\": 50,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Outreach",
+      "item": [
+        {
+          "name": "Get Outreach Queue 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/queue",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "queue"],
+              "query": [
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "disabled": true,
+                  "description": "Filter by priority: HIGH, MEDIUM, LOW"
+                },
+                {
+                  "key": "activityStatus",
+                  "value": "RECENTLY_INACTIVE",
+                  "disabled": true,
+                  "description": "Filter by activity status"
+                },
+                {
+                  "key": "onlyDue",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "Only return members whose follow-up is due or never contacted"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Search by name, phone, or matric"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Primary outreach workflow endpoint. Returns prioritized list of members requiring check-ins or follow-ups with backend-recommended actions."
+          },
+          "response": [
+            {
+              "name": "Get Outreach Queue - Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"summary\": {\n      \"totalInQueue\": 3,\n      \"highPriorityCount\": 2,\n      \"mediumPriorityCount\": 1,\n      \"lowPriorityCount\": 0,\n      \"followUpDueCount\": 1\n    },\n    \"items\": [\n      {\n        \"member\": {\n          \"id\": \"mem_09028872023\",\n          \"firstName\": \"Charity\",\n          \"lastName\": \"Ayodele\",\n          \"phoneNumber\": \"09028872023\"\n        },\n        \"attendance\": {\n          \"totalAttendance\": 1,\n          \"daysSinceLastAttendance\": 74\n        },\n        \"activityStatus\": \"INACTIVE\",\n        \"lastOutreach\": {\n          \"id\": \"out_init_1\",\n          \"contactedAt\": \"2026-08-25T10:00:00.000Z\",\n          \"status\": \"RESPONDED\",\n          \"nextFollowUpDate\": \"2026-09-01\"\n        },\n        \"followUp\": {\n          \"isFollowUpDue\": true,\n          \"nextFollowUpDate\": \"2026-09-01\",\n          \"daysUntilFollowUp\": -12\n        },\n        \"priority\": \"HIGH\",\n        \"recommendedAction\": \"Follow up with member\"\n      }\n    ],\n    \"meta\": {\n      \"total\": 3,\n      \"page\": 1,\n      \"limit\": 50,\n      \"totalPages\": 1\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Outreach Logs 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach"],
+              "query": [
+                {
+                  "key": "memberId",
+                  "value": "{{memberId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "CONTACTED",
+                  "disabled": true
+                },
+                {
+                  "key": "contactMethod",
+                  "value": "WHATSAPP",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Lists all outreach records with optional status, method, and date filters."
+          }
+        },
+        {
+          "name": "Get Outreach by ID 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/{{outreachId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "{{outreachId}}"]
+            },
+            "description": "Fetches a specific outreach log by its unique record ID."
+          }
+        },
+        {
+          "name": "Record Outreach 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"contactMethod\": \"WHATSAPP\",\n  \"status\": \"CONTACTED\",\n  \"message\": \"Checking in on absence from recent sessions and academic schedule.\",\n  \"nextFollowUpDate\": \"2026-09-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach"]
+            },
+            "description": "Logs an outreach communication attempt or successful interaction with a member."
+          }
+        },
+        {
+          "name": "Update Outreach 🔒",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESPONDED\",\n  \"response\": \"Member replied: preparing for exams, plans to resume on the 20th.\",\n  \"nextFollowUpDate\": \"2026-09-20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/{{outreachId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "{{outreachId}}"]
+            },
+            "description": "Updates status, member response, or rescheduled follow-up date."
+          }
+        },
+        {
+          "name": "Get Member Outreach History 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/{{memberId}}/outreach",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "{{memberId}}", "outreach"]
+            },
+            "description": "Retrieves the complete history of outreach check-ins for a specific member."
+          }
+        }
+      ]
+    }
+  ]
+}

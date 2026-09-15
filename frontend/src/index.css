@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #a20513;
+  --color-primary-container: #c62828;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffe0dd;
+  --color-primary-fixed: #ffdad6;
+  --color-on-primary-fixed: #410003;
+  
+  --color-secondary: #5b5e67;
+  --color-secondary-container: #dfe2ec;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #61646d;
+
+  --color-tertiary: #0046bb;
+  --color-tertiary-container: #1a5de5;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #e2e6ff;
+  --color-tertiary-fixed: #dbe1ff;
+  --color-on-tertiary-fixed: #00174b;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #5b403d;
+
+  --color-outline: #8f706c;
+  --color-outline-variant: #e4beba;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+
+  --font-headline: 'Oswald', sans-serif;
+  --font-metric: 'Oswald', sans-serif;
+  --font-display: 'Oswald', sans-serif;
+  --font-label-caps: 'Oswald', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-label: 'Inter', sans-serif;
+}
+
+/* Custom Typography & Utility Classes matching Stitch Design */
+.font-headline-lg {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  line-height: 2.375rem;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.font-headline-md {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.875rem;
+  font-weight: 600;
+}
+
+.font-headline-sm {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+}
+
+.font-metric-xl {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.font-metric-md {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.75rem;
+  line-height: 1.875rem;
+  font-weight: 600;
+}
+
+.font-label-caps {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.6875rem;
+  line-height: 0.875rem;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.font-body-lg {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.font-body-md {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.font-body-sm {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.font-label-lg {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  font-weight: 600;
+}
+
+.font-label-md {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+}
+
+/* Material symbols outlined alignment */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
