@@ -30,7 +30,7 @@ A full-stack, enterprise-grade web application built for the **University of Iba
 ## 1. Project Overview & Objectives
 
 ### The Problem
-University sports clubs often struggle with member retention and administrative overhead. Attendance records are frequently kept on ad-hoc paper sheets or scattered spreadsheets, making it difficult to detect when a judoka stops attending training until months later.
+University sports clubs often struggle with member retention and administrative overhead. No attendance records are kept, making it difficult to detect when a judoka stops attending training until months later.
 
 ### The Solution
 The **UI Judo Outreach & Attendance System** acts as a centralized operational hub:
