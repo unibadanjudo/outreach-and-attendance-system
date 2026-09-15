@@ -11,7 +11,7 @@ describe('validateEnvironment', () => {
     GOOGLE_CLIENT_SECRET: 'google-client-secret',
     GOOGLE_CALLBACK_URL: 'http://localhost:3000/api/auth/google/callback',
     GOOGLE_SHEETS_SPREADSHEET_ID: 'sheets-spreadsheet-id',
-    AUTHORIZED_EMAILS: 'admin@uijudo.club',
+    GOOGLE_SHEETS_ALLOWED_USERS_RANGE: 'AllowedUsers!A:F',
     SESSION_SECRET: 'secure-session-secret-string',
   };
 

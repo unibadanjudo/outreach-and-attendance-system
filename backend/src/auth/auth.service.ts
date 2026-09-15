@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { AllowedUsersService } from '../allowed-users/allowed-users.service';
+import { UserStatus } from '../allowed-users/models/allowed-user.model';
 import { UserSession } from './interfaces/user-session.interface';
 
 export interface GoogleProfile {
@@ -17,33 +18,20 @@ export interface GoogleProfile {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly allowedUsersService: AllowedUsersService) {}
 
   /**
-   * Returns list of lowercase authorized emails configured in environment.
+   * Checks if an email is authorized and active in the Google Sheets allowlist.
    */
-  getAuthorizedEmails(): string[] {
-    const rawEmails = this.configService.get<string>('AUTHORIZED_EMAILS') || '';
-
-    return rawEmails
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
-  }
-
-  /**
-   * Checks if an email is authorized to access the system.
-   */
-  isEmailAuthorized(email: string): boolean {
+  async isEmailAuthorized(email: string): Promise<boolean> {
     if (!email) return false;
-    const authorizedEmails = this.getAuthorizedEmails();
-    return authorizedEmails.includes(email.trim().toLowerCase());
+    return this.allowedUsersService.isAllowed(email);
   }
 
   /**
-   * Validates a Google OAuth profile against authorized club accounts.
+   * Validates a Google OAuth profile against the AllowedUsers sheet.
    */
-  validateGoogleUser(profile: GoogleProfile): UserSession {
+  async validateGoogleUser(profile: GoogleProfile): Promise<UserSession> {
     const email = profile.emails?.[0]?.value;
 
     if (!email) {
@@ -52,8 +40,9 @@ export class AuthService {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const access = await this.allowedUsersService.getAccess(normalizedEmail);
 
-    if (!this.isEmailAuthorized(normalizedEmail)) {
+    if (!access || access.status !== UserStatus.ACTIVE) {
       this.logger.warn(
         `Unauthorized login attempt from Google account: ${normalizedEmail}`,
       );
@@ -63,13 +52,14 @@ export class AuthService {
     }
 
     const name =
+      access.name ||
       profile.displayName ||
       (profile.name
         ? `${profile.name.givenName || ''} ${profile.name.familyName || ''}`.trim()
         : '') ||
       normalizedEmail;
 
-    const picture = profile.photos?.[0]?.value;
+    const picture = access.profileUrl || profile.photos?.[0]?.value;
 
     this.logger.log(`User authorized successfully: ${normalizedEmail}`);
 
@@ -77,7 +67,8 @@ export class AuthService {
       email: normalizedEmail,
       name,
       picture,
-      role: 'ADMIN',
+      role: access.role || 'MEMBER',
+      rank: access.rank,
     };
   }
 }

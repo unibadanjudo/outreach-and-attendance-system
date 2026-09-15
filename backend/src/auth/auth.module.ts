@@ -6,9 +6,14 @@ import { AuthService } from './auth.service';
 import { GoogleStrategy } from './google/google.strategy';
 import { SessionSerializer } from './session.serializer';
 import { GoogleModule } from './google/google.module';
+import { AllowedUsersModule } from '../allowed-users/allowed-users.module';
 
 @Module({
-  imports: [PassportModule.register({ session: true }), GoogleModule],
+  imports: [
+    PassportModule.register({ session: true }),
+    GoogleModule,
+    AllowedUsersModule,
+  ],
   controllers: [AuthController, DevAuthController],
   providers: [AuthService, GoogleStrategy, SessionSerializer],
   exports: [AuthService, PassportModule],

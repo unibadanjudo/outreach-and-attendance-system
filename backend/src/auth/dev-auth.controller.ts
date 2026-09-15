@@ -31,18 +31,18 @@ export class DevAuthController {
     status: 200,
     description: 'Direct session login for Postman testing',
   })
-  devLogin(
+  async devLogin(
     @Body('email') email: string,
     @Req() req: Request,
     @Res() res: Response,
-  ): void {
+  ): Promise<void> {
     if (this.configService.get<string>('NODE_ENV') === 'production') {
       throw new NotFoundException();
     }
 
     const targetEmail = (email || 'coach@uijudo.club').trim().toLowerCase();
 
-    if (!this.authService.isEmailAuthorized(targetEmail)) {
+    if (!(await this.authService.isEmailAuthorized(targetEmail))) {
       throw new BadRequestException(`Email ${targetEmail} is not authorized`);
     }
 

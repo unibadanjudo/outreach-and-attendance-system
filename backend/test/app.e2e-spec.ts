@@ -13,7 +13,7 @@ describe('Application Startup (e2e)', () => {
     process.env.GOOGLE_CALLBACK_URL =
       'http://localhost:3000/api/auth/google/callback';
     process.env.GOOGLE_SHEETS_SPREADSHEET_ID = 'test-sheet-id';
-    process.env.AUTHORIZED_EMAILS = 'test@uijudo.club';
+    process.env.GOOGLE_SHEETS_ALLOWED_USERS_RANGE = 'AllowedUsers!A:F';
     process.env.SESSION_SECRET = 'test-session-secret-min-16-chars';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

@@ -9,6 +9,7 @@ import { MembersModule } from './members/members.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { OutreachModule } from './outreach/outreach.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AllowedUsersModule } from './allowed-users/allowed-users.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     }),
     GoogleModule,
     HealthModule,
+    AllowedUsersModule,
     AuthModule,
     MembersModule,
     AttendanceModule,

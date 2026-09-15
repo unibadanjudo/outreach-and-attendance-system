@@ -72,8 +72,8 @@ export class EnvironmentVariables {
   GOOGLE_PRIVATE_KEY?: string;
 
   @IsString()
-  @IsNotEmpty()
-  AUTHORIZED_EMAILS: string;
+  @IsOptional()
+  GOOGLE_SHEETS_ALLOWED_USERS_RANGE: string = 'AllowedUsers!A:F';
 
   @IsString()
   @IsNotEmpty()

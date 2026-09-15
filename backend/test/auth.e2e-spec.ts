@@ -66,7 +66,7 @@ describe('Authentication Guards & Authorization (e2e)', () => {
   });
 
   describe('Unauthorized user', () => {
-    it('should reject login for email not in AUTHORIZED_EMAILS with 401', async () => {
+    it('should reject login for email not in sheet allowlist with 401', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/auth/test/validate-email')
         .send({ email: 'unauthorized@gmail.com', name: 'Unknown User' })

@@ -19,6 +19,9 @@ import { AuthService } from '../../src/auth/auth.service';
 import { HttpExceptionFilter } from '../../src/common/filters/http-exception.filter';
 import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 
+import { ALLOWED_USERS_REPOSITORY } from '../../src/allowed-users/repositories/allowed-users.repository.interface';
+import { UserStatus } from '../../src/allowed-users/models/allowed-user.model';
+
 export interface AuthResponse {
   success: boolean;
   data: { email: string; name: string; role: string };
@@ -42,20 +45,20 @@ export class TestAuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('validate-email')
-  validateEmail(@Body() body: { email: string; name?: string }) {
-    return this.authService.validateGoogleUser({
+  async validateEmail(@Body() body: { email: string; name?: string }) {
+    return await this.authService.validateGoogleUser({
       displayName: body.name || 'Test User',
       emails: [{ value: body.email, verified: true }],
     });
   }
 
   @Post('simulate-login')
-  simulateLogin(
+  async simulateLogin(
     @Body() body: { email: string; name?: string },
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const user = this.authService.validateGoogleUser({
+    const user = await this.authService.validateGoogleUser({
       displayName: body.name || 'Test User',
       emails: [{ value: body.email, verified: true }],
     });
@@ -86,12 +89,35 @@ export async function createAuthTestApp(
     GOOGLE_CLIENT_SECRET: 'test-client-secret',
     GOOGLE_CALLBACK_URL: `http://localhost:${port}/api/auth/google/callback`,
     GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-id',
-    AUTHORIZED_EMAILS: 'coach@uijudo.club,admin@uijudo.club',
+    GOOGLE_SHEETS_ALLOWED_USERS_RANGE: 'AllowedUsers!A:F',
     SESSION_SECRET: 'test-session-secret-min-16-characters',
   });
 
+  const mockUsers = [
+    {
+      email: 'coach@uijudo.club',
+      name: 'UI Coach',
+      role: 'ADMIN',
+      status: UserStatus.ACTIVE,
+      addedAt: '2026-09-01',
+    },
+    {
+      email: 'admin@uijudo.club',
+      name: 'UI Admin',
+      role: 'ADMIN',
+      status: UserStatus.ACTIVE,
+      addedAt: '2026-09-01',
+    },
+  ];
+
   let builder = Test.createTestingModule({
     imports: [AppModule, TestHelperModule],
+  }).overrideProvider(ALLOWED_USERS_REPOSITORY).useValue({
+    findAll: jest.fn().mockResolvedValue(mockUsers),
+    findByEmail: jest.fn(async (email: string) => {
+      const normalized = email?.trim().toLowerCase();
+      return mockUsers.find((u) => u.email.toLowerCase() === normalized) || null;
+    }),
   });
   if (customize) {
     builder = customize(builder);

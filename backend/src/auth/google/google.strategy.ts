@@ -19,14 +19,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  validate(
+  async validate(
     accessToken: string,
     refreshToken: string,
     profile: GoogleProfile,
     done: VerifyCallback,
-  ): void {
+  ): Promise<void> {
     try {
-      const user: UserSession = this.authService.validateGoogleUser(profile);
+      const user: UserSession =
+        await this.authService.validateGoogleUser(profile);
       done(null, user);
     } catch (error) {
       if (error instanceof Error) {

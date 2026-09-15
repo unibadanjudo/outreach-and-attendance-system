@@ -14,6 +14,10 @@ export const AuthCallbackPage: React.FC = () => {
       const message = searchParams.get('message');
 
       if (status === 'error') {
+        if (message === 'unauthorized') {
+          navigate('/unauthorized', { replace: true });
+          return;
+        }
         setErrorMessage(message || 'Authentication was denied or failed.');
         return;
       }

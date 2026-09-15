@@ -14,14 +14,12 @@ export const appConfig = registerAs('app', () => ({
     attendanceRange:
       process.env.GOOGLE_SHEETS_ATTENDANCE_RANGE || 'Attendance!A:Z',
     outreachRange: process.env.GOOGLE_SHEETS_OUTREACH_RANGE || 'Outreach!A:Z',
+    allowedUsersRange:
+      process.env.GOOGLE_SHEETS_ALLOWED_USERS_RANGE || 'AllowedUsers!A:F',
     serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     privateKey: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   },
   auth: {
-    authorizedEmails: (process.env.AUTHORIZED_EMAILS || '')
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
     sessionSecret: process.env.SESSION_SECRET,
   },
   inactivity: {

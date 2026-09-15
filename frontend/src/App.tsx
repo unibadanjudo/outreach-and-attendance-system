@@ -8,6 +8,7 @@ import { useAuthStore } from './lib/stores/useAuthStore';
 import { AppLayout } from './lib/components/layout/AppLayout';
 import { LoginPage } from './pages/Login/LoginPage';
 import { AuthCallbackPage } from './pages/AuthCallback/AuthCallbackPage';
+import { UnauthorizedPage } from './pages/Unauthorized/UnauthorizedPage';
 import { DashboardPage } from './pages/Dashboard/DashboardPage';
 import { MembersPage } from './pages/Members/MembersPage';
 import { MemberDetailsPage } from './pages/MemberDetails/MemberDetailsPage';
@@ -38,6 +39,7 @@ export const App: React.FC = () => {
           {/* Public Authentication Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Protected Dojo Operations Shell */}
           <Route path="/" element={<AppLayout />}>

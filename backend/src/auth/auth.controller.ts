@@ -39,17 +39,15 @@ export class AuthController {
     status: 302,
     description: 'Redirects to frontend application',
   })
-  googleAuthCallback(@Req() req: Request, @Res() res: Response): void {
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
     const frontendUrl = this.configService.get<string>(
       'FRONTEND_URL',
       'http://localhost:5173',
     );
     const user = req.user as UserSession;
 
-    if (!user || !this.authService.isEmailAuthorized(user.email)) {
-      res.redirect(
-        `${frontendUrl}/auth/callback?status=error&message=unauthorized`,
-      );
+    if (!user || !(await this.authService.isEmailAuthorized(user.email))) {
+      res.redirect(`${frontendUrl}/unauthorized`);
       return;
     }
 
