@@ -32,7 +32,10 @@ async function bootstrap() {
 
   // CORS Configuration
   const isProduction = nodeEnv === 'production';
-  const allowedOrigins = isProduction
+  const isLocalhost =
+    frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+  const isSecure = isProduction && !isLocalhost;
+  const allowedOrigins = isProduction && !isLocalhost
     ? [frontendUrl]
     : [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'];
 
@@ -52,8 +55,8 @@ async function bootstrap() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        secure: isSecure,
+        sameSite: isSecure ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       },
     }),

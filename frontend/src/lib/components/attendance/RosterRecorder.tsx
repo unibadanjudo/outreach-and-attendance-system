@@ -4,6 +4,12 @@ import { BeltBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatters';
 import type { AttendanceStatus, Member } from '../../types';
 
+const isValidNickname = (nickname?: string | null): nickname is string => {
+  if (!nickname) return false;
+  const clean = nickname.trim().toLowerCase();
+  return clean !== '' && clean !== 'nil' && clean !== 'none' && clean !== 'n/a' && clean !== '-';
+};
+
 interface RosterItem {
   member: Member;
   status: AttendanceStatus;
@@ -65,11 +71,10 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`font-label-caps px-3 py-1 rounded transition-colors cursor-pointer ${
-                  tab === t
-                    ? 'bg-primary text-on-primary font-bold shadow-xs'
-                    : 'text-secondary hover:text-on-surface'
-                }`}
+                className={`font-label-caps px-3 py-1 rounded transition-colors cursor-pointer ${tab === t
+                  ? 'bg-primary text-on-primary font-bold shadow-xs'
+                  : 'text-secondary hover:text-on-surface'
+                  }`}
               >
                 {t}
               </button>
@@ -101,9 +106,17 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
                 <span className="font-label-lg text-on-surface leading-tight">
                   {member.firstName} {member.lastName}
                 </span>
+                {isValidNickname(member.nickname) && (
+                  <span className="font-body-sm text-secondary text-xs italic">
+                    "{member.nickname.trim()}"
+                  </span>
+                )}
                 <span className="font-body-sm text-secondary text-xs">
                   {member.facultyDepartment} • {member.matricNumber || member.phoneNumber}
                 </span>
+
+
+
                 {date && (
                   <span className="font-label-caps text-[10px] text-primary/80 flex items-center gap-1 mt-0.5">
                     <Calendar className="w-3 h-3" /> Session Date: {date}
@@ -117,33 +130,30 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
             <div className="flex items-center gap-1.5 self-end sm:self-auto">
               <button
                 onClick={() => onStatusChange(member.id, 'PRESENT')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${
-                  status === 'PRESENT'
-                    ? 'bg-[#16A34A] text-white shadow-xs'
-                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'PRESENT'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
+                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                  }`}
               >
                 <Check className="w-4 h-4" />
                 <span>Present</span>
               </button>
               <button
                 onClick={() => onStatusChange(member.id, 'ABSENT')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${
-                  status === 'ABSENT'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'ABSENT'
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                  }`}
               >
                 <X className="w-4 h-4" />
                 <span>Absent</span>
               </button>
               <button
                 onClick={() => onStatusChange(member.id, 'EXCUSED')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${
-                  status === 'EXCUSED'
-                    ? 'bg-[#D97706] text-white shadow-xs'
-                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'EXCUSED'
+                  ? 'bg-[#D97706] text-white shadow-xs'
+                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 <span>Excused</span>

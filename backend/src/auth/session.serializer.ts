@@ -16,13 +16,18 @@ export class SessionSerializer extends PassportSerializer {
     done(null, user);
   }
 
-  deserializeUser(
+  async deserializeUser(
     payload: UserSession,
     done: (err: Error | null, payload: UserSession | null) => void,
-  ): void {
-    if (!this.authService.isEmailAuthorized(payload.email)) {
-      return done(null, null);
+  ): Promise<void> {
+    try {
+      const authorized = await this.authService.isEmailAuthorized(payload.email);
+      if (!authorized) {
+        return done(null, null);
+      }
+      done(null, payload);
+    } catch (err) {
+      done(err as Error, null);
     }
-    done(null, payload);
   }
 }

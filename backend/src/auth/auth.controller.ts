@@ -1,6 +1,5 @@
 import {
-  Controller, Get, HttpCode, HttpStatus, InternalServerErrorException,
-  Post, Req, Res, UseGuards,
+  Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -10,7 +9,6 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import type { UserSession } from './interfaces/user-session.interface';
-
 import { renderAuthSuccessHtml } from './utils/auth-html.util';
 
 @ApiTags('Auth')
@@ -40,10 +38,7 @@ export class AuthController {
     description: 'Redirects to frontend application',
   })
   async googleAuthCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const frontendUrl = this.configService.get<string>(
-      'FRONTEND_URL',
-      'http://localhost:5173',
-    );
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
     const user = req.user as UserSession;
 
     if (!user || !(await this.authService.isEmailAuthorized(user.email))) {
@@ -53,22 +48,18 @@ export class AuthController {
 
     if (req.query.state === 'postman') {
       const rawCookie = res.getHeader('set-cookie');
-      const cookieStr = Array.isArray(rawCookie)
-        ? rawCookie[0]
-        : (rawCookie as string) || '';
-      res
-        .type('html')
-        .send(renderAuthSuccessHtml(user, cookieStr.split(';')[0]));
+      const cookieStr = Array.isArray(rawCookie) ? rawCookie[0] : (rawCookie as string) || '';
+      res.type('html').send(renderAuthSuccessHtml(user, cookieStr.split(';')[0]));
       return;
     }
 
     if (req.session) {
-      req.session.save(() => {
-        res.redirect(`${frontendUrl}/auth/callback?status=success`);
+      await new Promise<void>((resolve) => {
+        req.session.save(() => resolve());
       });
-    } else {
-      res.redirect(`${frontendUrl}/auth/callback?status=success`);
     }
+
+    res.redirect(`${frontendUrl}/auth/callback?status=success`);
   }
 
   @Get('me')
@@ -124,11 +115,18 @@ export class AuthController {
     const finish = () => {
       const isProd =
         this.configService.get<string>('NODE_ENV') === 'production';
+      const frontendUrl = this.configService.get<string>(
+        'FRONTEND_URL',
+        'http://localhost:5173',
+      );
+      const isLocalhost =
+        frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+      const isSecure = isProd && !isLocalhost;
       res.clearCookie('uijudo.sid', {
         path: '/',
         httpOnly: true,
-        sameSite: isProd ? 'none' : 'lax',
-        secure: isProd,
+        sameSite: isSecure ? 'none' : 'lax',
+        secure: isSecure,
       });
 
       res.json({
