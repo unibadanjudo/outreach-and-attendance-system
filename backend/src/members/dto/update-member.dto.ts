@@ -69,6 +69,15 @@ export class UpdateMemberDto {
   motivation?: string;
 
   @ApiPropertyOptional({
+    example: 'Joined after admission / Online group',
+    description: 'How the member heard about Judo / the club',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  howDidYouHearAboutUs?: string;
+
+  @ApiPropertyOptional({
     example: 'Black Belt (1st Dan - Shodan)',
     description: 'Judo belt rank (Kyu or Dan grade)',
   })

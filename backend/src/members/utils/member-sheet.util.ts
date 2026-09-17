@@ -58,6 +58,7 @@ const FIELD_TO_HEADER_TITLE: Partial<Record<keyof Member, string>> = {
   dateOfBirth: 'Date Of Birth',
   judoStartDate: 'Date You Started Judo',
   motivation: 'Primary Motivation for Training Judo',
+  howDidYouHearAboutUs: 'How did you hear about Judo',
 };
 
 export async function ensureColumnForField(

@@ -6,3 +6,4 @@ export * from './MemberHistoryTabs';
 export * from './BeltRankSelector';
 export * from './EditMemberModal';
 export * from './UpdateBeltRankModal';
+export * from './MemberBioCard';

@@ -41,24 +41,44 @@ describe('MembersController', () => {
     controller = new MembersController(mockService as MembersService);
   });
 
+  const coachUser = { email: 'coach@uijudo.club', role: 'COACH' };
+  const reacherUser = { email: 'reacher@uijudo.club', role: 'REACHER' };
+
   it('findAll should return members list', async () => {
-    const result = await controller.findAll({ page: 1, limit: 50 });
+    const result = await controller.findAll({ page: 1, limit: 50 }, coachUser);
     expect(result.items).toHaveLength(1);
     expect(mockService.findAll).toHaveBeenCalledWith({ page: 1, limit: 50 });
+    expect(result.items[0].dateOfBirth).toBe('1860-10-28');
+  });
+
+  it('findAll should mask year of birth for REACHER role', async () => {
+    const result = await controller.findAll({ page: 1, limit: 50 }, reacherUser);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].dateOfBirth).toBe('28/10');
   });
 
   it('findById should return a single member', async () => {
-    const result = await controller.findById('mem_08011112222');
+    const result = await controller.findById('mem_08011112222', coachUser);
     expect(result.id).toBe('mem_08011112222');
+    expect(result.dateOfBirth).toBe('1860-10-28');
     expect(mockService.findById).toHaveBeenCalledWith('mem_08011112222');
   });
 
+  it('findById should mask year of birth for REACHER role', async () => {
+    const result = await controller.findById('mem_08011112222', reacherUser);
+    expect(result.id).toBe('mem_08011112222');
+    expect(result.dateOfBirth).toBe('28/10');
+  });
+
   it('getMemberSummary should return member summary', async () => {
-    const result = await controller.getMemberSummary('mem_08011112222');
+    const result = await controller.getMemberSummary('mem_08011112222', coachUser);
     expect(result.member.id).toBe('mem_08011112222');
-    expect(mockService.getMemberSummary).toHaveBeenCalledWith(
-      'mem_08011112222',
-    );
+    expect(mockService.getMemberSummary).toHaveBeenCalledWith('mem_08011112222');
+  });
+
+  it('getMemberSummary should mask year of birth for REACHER role', async () => {
+    const result = await controller.getMemberSummary('mem_08011112222', reacherUser);
+    expect(result.member.dateOfBirth).toBe('28/10');
   });
 
   it('getMemberActivity should return member activity details', async () => {

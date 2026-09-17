@@ -118,5 +118,51 @@ describe('MemberRowMapper', () => {
       const member = rowToMember(headerKeys, rowValues, 2);
       expect(member.beltRank).toBe('Black Belt (10th Dan - Judan)');
     });
+
+    it('should map complex Google Form questions with multiline descriptions', () => {
+      const headers = [
+        'Timestamp',
+        'First Name',
+        'Last Name',
+        'Other Names',
+        'Nick Name',
+        'Phone Number',
+        'Faculty-Department\ne.g\nScience - Statistics',
+        'Matric',
+        'Date Of Birth',
+        "Date You Started Judo\n\nIf you don't remember the exact date, you can pick the 1st of the earliest month you remember starting",
+        'What is your primary motivation for training Judo?',
+        'How did you hear about Judo',
+        'Belt Rank',
+      ];
+      const headerKeys = mapHeadersToMemberKeys(headers);
+      const rowValues = [
+        '12/09/2026 21:32:07',
+        'Charity',
+        'Ayodele',
+        'Ajibare',
+        'Nil',
+        '9028872023',
+        'Education',
+        '238279',
+        '07/04/2001',
+        '01/12/2024',
+        'Self-defense, Physical fitness',
+        'I joined the group after admission',
+        'Yellow Belt (5th Kyu (Gokyu))',
+      ];
+
+      const member = rowToMember(headerKeys, rowValues, 2);
+      expect(member.firstName).toBe('Charity');
+      expect(member.lastName).toBe('Ayodele');
+      expect(member.nickname).toBe('Nil');
+      expect(member.facultyDepartment).toBe('Education');
+      expect(member.matricNumber).toBe('238279');
+      expect(member.dateOfBirth).toBe('07/04/2001');
+      expect(member.judoStartDate).toBe('01/12/2024');
+      expect(member.motivation).toBe('Self-defense, Physical fitness');
+      expect(member.howDidYouHearAboutUs).toBe('I joined the group after admission');
+      expect(member.beltRank).toBe('Yellow Belt (5th Kyu (Gokyu))');
+    });
   });
 });

@@ -10,6 +10,7 @@ export interface Member {
   dateOfBirth: string;
   judoStartDate: string;
   motivation: string;
+  howDidYouHearAboutUs?: string;
   beltRank?: string;
   createdAt: string;
   updatedAt: string;

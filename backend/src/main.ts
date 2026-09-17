@@ -34,7 +34,8 @@ async function bootstrap() {
   const isProduction = nodeEnv === 'production';
   const isLocalhost =
     frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
-  const isSecure = isProduction && !isLocalhost;
+  // When interacting with a remote frontend (e.g. on Vercel), cookies MUST use SameSite=None and Secure
+  const isSecure = !isLocalhost;
   const allowedOrigins = isProduction && !isLocalhost
     ? [frontendUrl]
     : [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'];
@@ -57,8 +58,9 @@ async function bootstrap() {
         httpOnly: true,
         secure: isSecure,
         sameSite: isSecure ? 'none' : 'lax',
+        partitioned: isSecure,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      },
+      } as any,
     }),
   );
 
@@ -107,7 +109,7 @@ async function bootstrap() {
     );
   }
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(
     `Application is running in [${nodeEnv}] mode on http://localhost:${port}/api`,
   );
