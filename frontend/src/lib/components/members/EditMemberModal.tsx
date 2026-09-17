@@ -35,6 +35,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
         dateOfBirth: member.dateOfBirth || '',
         judoStartDate: member.judoStartDate || '',
         motivation: member.motivation || '',
+        howDidYouHearAboutUs: member.howDidYouHearAboutUs || '',
         beltRank: member.beltRank || 'Unranked',
       });
       setErrorMsg(null);
@@ -176,6 +177,13 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             value={formData.motivation || ''}
             onChange={(e) => handleChange('motivation', e.target.value)}
             placeholder="e.g. Sport, Self Defense, Fitness, Competition"
+          />
+
+          <Input
+            label="How Did You Hear About Us"
+            value={formData.howDidYouHearAboutUs || ''}
+            onChange={(e) => handleChange('howDidYouHearAboutUs', e.target.value)}
+            placeholder="e.g. Social media, friend, online group, flyer"
           />
         </div>
 

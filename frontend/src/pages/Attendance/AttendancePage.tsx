@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useAuthStore } from '../../lib/stores/useAuthStore';
+import { canMarkAttendance } from '../../lib/types/auth.types';
 import { useMembersList } from '../../lib/hooks/useMembers';
 import { useAttendanceList, useBatchRecordAttendance } from '../../lib/hooks/useAttendance';
 import { SessionControls } from '../../lib/components/attendance/SessionControls';
@@ -25,11 +27,19 @@ function getDefaultSessionForDate(dateStr: string): string {
 }
 
 export const AttendancePage: React.FC = () => {
-  const [activeView, setActiveView] = useState<'RECORDER' | 'HISTORY'>('RECORDER');
+  const { user } = useAuthStore();
+  const canMark = canMarkAttendance(user?.role);
+  const [activeView, setActiveView] = useState<'RECORDER' | 'HISTORY'>(() => (canMark ? 'RECORDER' : 'HISTORY'));
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [session, setSession] = useState(() => getDefaultSessionForDate(today));
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>({});
+
+  useEffect(() => {
+    if (!canMark && activeView === 'RECORDER') {
+      setActiveView('HISTORY');
+    }
+  }, [canMark, activeView]);
 
   const { data: membersData, isLoading: isLoadingMembers } = useMembersList({ limit: 500 });
   const { data: attendanceData, isLoading: isLoadingAttendance } = useAttendanceList({
@@ -165,30 +175,41 @@ export const AttendancePage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       {/* View Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-surface-container-high pb-2">
-        <button
-          onClick={() => setActiveView('RECORDER')}
-          className={`font-label-lg px-4 py-2 rounded-xl transition-all cursor-pointer font-bold ${
-            activeView === 'RECORDER'
-              ? 'bg-primary text-on-primary shadow-xs'
-              : 'bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container'
-          }`}
-        >
-          🥋 Take Mat Attendance
-        </button>
-        <button
-          onClick={() => setActiveView('HISTORY')}
-          className={`font-label-lg px-4 py-2 rounded-xl transition-all cursor-pointer font-bold ${
-            activeView === 'HISTORY'
-              ? 'bg-primary text-on-primary shadow-xs'
-              : 'bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container'
-          }`}
-        >
-          📅 Attendance Records &amp; Logs (All Dates)
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high pb-2">
+        <div className="flex items-center gap-2">
+          {canMark && (
+            <button
+              onClick={() => setActiveView('RECORDER')}
+              className={`font-label-lg px-4 py-2 rounded-xl transition-all cursor-pointer font-bold ${
+                activeView === 'RECORDER'
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              🥋 Take Mat Attendance
+            </button>
+          )}
+          <button
+            onClick={() => setActiveView('HISTORY')}
+            className={`font-label-lg px-4 py-2 rounded-xl transition-all cursor-pointer font-bold ${
+              activeView === 'HISTORY'
+                ? 'bg-primary text-on-primary shadow-xs'
+                : 'bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            📅 Attendance Records &amp; Logs (All Dates)
+          </button>
+        </div>
+
+        {!canMark && (
+          <span className="font-label-caps text-xs text-secondary bg-surface-container px-3 py-1.5 rounded-lg flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="material-symbols-outlined text-sm">lock</span>
+            Read-only Attendance (Coach/Captain required to mark)
+          </span>
+        )}
       </div>
 
-      {activeView === 'HISTORY' ? (
+      {activeView === 'HISTORY' || !canMark ? (
         <AttendanceHistoryTable />
       ) : (
         <>

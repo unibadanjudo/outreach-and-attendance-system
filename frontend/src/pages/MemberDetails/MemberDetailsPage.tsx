@@ -7,6 +7,7 @@ import {
 } from '../../lib/hooks/useMembers';
 import { MemberProfileHeader } from '../../lib/components/members/MemberProfileHeader';
 import { MemberStatsMatrix } from '../../lib/components/members/MemberStatsMatrix';
+import { MemberBioCard } from '../../lib/components/members/MemberBioCard';
 import { MemberHistoryTabs } from '../../lib/components/members/MemberHistoryTabs';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import { EmptyState } from '../../lib/components/common/EmptyState';
@@ -54,6 +55,9 @@ export const MemberDetailsPage: React.FC = () => {
 
       {/* KPI Stats Matrix */}
       <MemberStatsMatrix summary={summaryQuery.data} />
+
+      {/* Academic & Background Info */}
+      <MemberBioCard member={summaryQuery.data.member} />
 
       {/* Full Attendance & Outreach Log Tabs */}
       <MemberHistoryTabs

@@ -8,13 +8,19 @@ A full-stack, enterprise-grade web application built for the **University of Iba
 
 - [1. Project Overview & Objectives](#1-project-overview--objectives)
 - [2. Key Features](#2-key-features)
+  - [🥋 Member Management](#-member-management)
+  - [📋 Attendance Tracking & Mat Recorder](#-attendance-tracking--mat-recorder)
+  - [📢 Outreach & Retention Engine](#-outreach--retention-engine)
+  - [🛡️ Role-Based Access Control (RBAC)](#️-role-based-access-control-rbac)
+  - [📊 Executive Dashboard](#-executive-dashboard)
+  - [🔐 Security & Session Architecture](#-security--session-architecture)
 - [3. Architecture & Tech Stack](#3-architecture--tech-stack)
 - [4. Repository Structure](#4-repository-structure)
 - [5. Prerequisites & External Setup](#5-prerequisites--external-setup)
 - [6. Backend Documentation & Setup](#6-backend-documentation--setup)
   - [Backend Architecture](#backend-architecture)
   - [Backend Environment Variables](#backend-environment-variables)
-  - [Running the Backend](#running-the-backend)
+  - [Running the Backend (Local & Docker)](#running-the-backend-local--docker)
   - [API Endpoints & Swagger](#api-endpoints--swagger)
 - [7. Frontend Documentation & Setup](#7-frontend-documentation--setup)
   - [Frontend Architecture](#frontend-architecture)
@@ -22,7 +28,7 @@ A full-stack, enterprise-grade web application built for the **University of Iba
   - [Running the Frontend](#running-the-frontend)
 - [8. Authentication & Authorization Flow](#8-authentication--authorization-flow)
 - [9. Testing & Quality Assurance](#9-testing--quality-assurance)
-- [10. Deployment (Render & Vercel)](#10-deployment-render--vercel)
+- [10. Deployment (Render, Vercel & Docker)](#10-deployment-render-vercel--docker)
 - [11. Development Guidelines & Rules](#11-development-guidelines--rules)
 
 ---
@@ -36,40 +42,58 @@ University sports clubs often struggle with member retention and administrative 
 The **UI Judo Outreach & Attendance System** acts as a centralized operational hub:
 - **Zero-Cost Persistent Storage**: Uses **Google Sheets as the database** via Google Cloud Service Accounts, meaning club executives can directly view, audit, and export data in spreadsheet format without incurring database hosting fees.
 - **Automated Inactivity Detection**: Analyzes training history to flag judokas who haven't trained in 14, 30, 60, or 90+ days.
-- **Actionable Outreach Workflow**: Generates prioritized outreach tasks with contact details and follow-up logging so club captains can reach out before members drop out permanently.
-- **Strict Role-Based Access Control**: Ensures only authorized club coaches and executive committee members can access sensitive club data via Google OAuth.
+- **Actionable Outreach Workflow**: Generates prioritized outreach tasks with contact details and follow-up logging so club captains and reachers can reach out before members drop out permanently.
+- **Granular Role-Based Access Control**: Differentiates capabilities between technical administrators, dojo coaches/captains, and member outreach specialists.
 
 ---
 
 ## 2. Key Features
 
 ### 🥋 Member Management
-- Complete judoka profiles: full name, student status, department, belt rank (White to Black), phone number, emergency contacts, and joining date.
+- Complete judoka profiles: full name, nickname (e.g. mat alias), student status, department, belt rank (White to Black), phone number, emergency contacts, and joining date.
 - Search, filter by belt rank, status (Active/Inactive), and sort.
-- Profile editing and soft-delete capabilities synchronized to the Google Sheets `Members` tab.
+- Profile editing and belt rank promotion synchronized directly to the Google Sheets `Members` tab.
+- Integrated quick actions: direct WhatsApp chat and phone dialer links.
 
-### 📋 Attendance Tracking
-- Rapid session attendance check-ins directly on mobile or tablet at the dojo mat.
-- Historical attendance records categorized by date and session type.
-- Individual member attendance streaks, mat hours, and frequency metrics.
+### 📋 Attendance Tracking & Mat Recorder
+- **Rapid Session Recorder**: Mobile-first mat console for live check-ins during training sessions (Monday, Tuesday, Thursday, Friday, Saturday Randori).
+- **Nickname Display**: Displays judoka nicknames on the roster recorder to make mat roll calls intuitive and familiar.
+- **Session Modes**: Full support for regular training days and `NO_TRAINING` session logging (auto-excusing members so inactivity timers are not unfairly triggered).
+- **Historical Attendance**: Full historical audit logs by date, session, and judoka.
 
 ### 📢 Outreach & Retention Engine
 - **Inactivity Tiers**:
   - `Active`: Trained within the last 14 days.
-  - `Recently Inactive`: 15–30 days absent (recommended gentle check-in).
-  - `Inactive`: 31–60 days absent (requires direct captain outreach).
+  - `Recently Inactive`: 15–30 days absent (gentle check-in).
+  - `Inactive`: 31–60 days absent (requires direct follow-up).
   - `Long-Term Inactive`: 60+ days absent (re-engagement campaign).
-- **Outreach Queue**: Prioritizes members based on inactivity severity.
-- **Follow-up Logs**: Records communication method (Call, WhatsApp, Email, In-Person), outreach response, notes, and the staff member who reached out.
+- **Outreach Queue**: Prioritizes judokas based on inactivity severity and historical engagement.
+- **Follow-up Logs**: Records communication method (Call, WhatsApp, Email, In-Person), outcome status, notes, and staff attribution.
+
+### 🛡️ Role-Based Access Control (RBAC)
+Granular access control enforced at both backend API boundaries and frontend interfaces:
+- **`COACH` & `CAPTAIN` (and `ADMIN`)**:
+  - Full operational access to the entire system.
+  - Take, edit, and batch record mat attendance.
+  - Update judoka profiles and promote belt ranks.
+  - Manage outreach and review club analytics.
+- **`REACHER`**:
+  - Specialized role dedicated to member follow-ups and retention.
+  - **Read-only** access to Dashboard analytics and Member Directory.
+  - **Full access** to the Outreach system (logging calls, WhatsApp check-ins, follow-up outcomes).
+  - **Restricted from marking or modifying attendance** (`POST/PATCH/DELETE /attendance` returns `403 Forbidden`).
+  - **Restricted from editing member profiles or changing belt ranks**.
+  - Frontend automatically locks attendance to read-only history mode and hides unauthorized edit controls.
 
 ### 📊 Executive Dashboard
 - High-level KPIs: Active Judokas count, weekly mat turnout, retention rate, and attendance distribution across ranks.
 - Interactive attendance and growth charts powered by Recharts.
 
-### 🔐 Security & Access Control
+### 🔐 Security & Session Architecture
 - Google OAuth 2.0 Single Sign-On (SSO).
-- Authorization verification: Even if a user authenticates with Google, they are only granted access if their email is explicitly listed in the `AllowedUsers` tab of the Google Sheet with an active role (`admin`, `coach`, `executive`).
-- Secure HTTP-only, SameSite session cookies (`uijudo.sid`).
+- Whitelist verification: Users must exist in the `AllowedUsers` sheet with an active authorized role (`ADMIN`, `COACH`, `CAPTAIN`, `REACHER`).
+- Cross-origin session cookies with `SameSite=None`, `Secure`, and `Partitioned` attributes ensuring flawless auth between independent frontend (Vercel) and backend (Render) domains.
+
 
 ---
 
@@ -220,8 +244,9 @@ SESSION_SECRET=a-secure-random-string-at-least-32-characters-long
 > [!IMPORTANT]
 > Always include `http://` or `https://` in `FRONTEND_URL`. In production, set `FRONTEND_URL=https://your-frontend.vercel.app` without a trailing slash.
 
-### Running the Backend
+### Running the Backend (Local & Docker)
 
+#### Option A: Local Node.js
 ```bash
 # Navigate to backend directory
 cd backend
@@ -237,6 +262,15 @@ npm run build
 
 # Run production build
 npm run start:prod
+```
+
+#### Option B: Docker Container
+```bash
+# Build the optimized production Docker image
+docker build -t uijudo-backend ./backend
+
+# Run container with environment configuration
+docker run -d --name uijudo-backend -p 3000:3000 --env-file backend/.env uijudo-backend
 ```
 
 ### API Endpoints & Swagger
@@ -304,12 +338,15 @@ The frontend will run at [http://localhost:5173](http://localhost:5173).
 1. **User triggers Sign-in**: Frontend redirects the browser to `${VITE_API_BASE_URL}/auth/google`.
 2. **Google Consent Screen**: User authenticates with their Google Account.
 3. **OAuth Callback**: Google redirects to `/api/auth/google/callback`.
-4. **Authorization Check**:
-   - Backend checks `AllowedUsers` tab in the Google Sheet.
-   - If the user's email is found and active, an encrypted session cookie (`uijudo.sid`) is created.
+4. **Authorization & Role Lookup**:
+   - Backend queries the `AllowedUsers` tab in the Google Sheet.
+   - If the user's email is found and active, their designated role (`ADMIN`, `COACH`, `CAPTAIN`, or `REACHER`) is saved to the session.
    - If unauthorized, the user is redirected to `/unauthorized`.
-5. **Session Success**: The user is redirected to `${FRONTEND_URL}/auth/callback?status=success`.
-6. **Client Sync**: Frontend calls `/api/auth/status` or `/api/auth/me` to load the current session profile and updates React Query auth state.
+5. **Session Success**: The user is redirected to `${FRONTEND_URL}/auth/callback?status=success` with an encrypted cross-origin session cookie (`uijudo.sid` with `SameSite=None`, `Secure`, `Partitioned`).
+6. **Client Sync**: Frontend calls `/api/auth/status` to load the current session profile and role permissions into the React client state.
+7. **Route & Endpoint Protection**:
+   - **Backend**: NestJS `RolesGuard` verifies endpoint decorators (`@Roles(...)`), rejecting unauthorized mutations with `403 Forbidden`.
+   - **Frontend**: Navigation, tab switchers, and mutation action buttons adapt dynamically based on `user.role`.
 
 ---
 
@@ -332,15 +369,16 @@ npm run lint
 
 ---
 
-## 10. Deployment (Render & Vercel)
+## 10. Deployment (Render, Vercel & Docker)
 
 ### Backend on Render (Web Service)
-1. **Build Command**: `npm install && npm run build`
-2. **Start Command**: `npm run start:prod`
-3. **Environment Variables**: Populate all variables from `backend/.env.example`.
-   - Ensure `FRONTEND_URL` is set to `https://outreach-and-attendance-system-m1os.vercel.app` (with `https://`).
-   - Ensure `NODE_ENV=production`.
-   - On Render, reverse proxies require `expressApp.set('trust proxy', 1)` (already configured in `main.ts`).
+- **Environment**: Node / Docker
+- **Build Command**: `npm install && npm run build` (or deploy with Dockerfile)
+- **Start Command**: `npm run start:prod`
+- **Environment Variables**: Populate all variables from `backend/.env.example`.
+  - Ensure `FRONTEND_URL` is set to `https://outreach-and-attendance-system-m1os.vercel.app` (with `https://`).
+  - Ensure `NODE_ENV=production`.
+  - On Render, reverse proxies require `expressApp.set('trust proxy', 1)` (already configured in `main.ts`).
 
 ### Frontend on Vercel
 1. **Framework Preset**: Vite

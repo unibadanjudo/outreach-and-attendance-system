@@ -13,8 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../common/guards/authenticated.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { UserSession } from '../auth/interfaces/user-session.interface';
+import { Role, type UserSession } from '../auth/interfaces/user-session.interface';
 import { AttendanceService } from './attendance.service';
 import { BatchCreateAttendanceDto } from './dto/batch-create-attendance.dto';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
@@ -25,7 +27,7 @@ import { Attendance } from './models/attendance.model';
 
 @ApiTags('Attendance')
 @Controller()
-@UseGuards(AuthenticatedGuard)
+@UseGuards(AuthenticatedGuard, RolesGuard)
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
@@ -48,6 +50,7 @@ export class AttendanceController {
 
   @Post('attendance')
   @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({ summary: 'Record training attendance 🔒' })
   @ApiResponse({ status: 201, description: 'Attendance recorded' })
   @ApiResponse({ status: 404, description: 'Member not found' })
@@ -61,6 +64,7 @@ export class AttendanceController {
 
   @Post('attendance/batch')
   @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({ summary: 'Batch record/update session attendance 🔒' })
   @ApiResponse({ status: 201, description: 'Batch attendance saved' })
   createBatch(
@@ -71,6 +75,7 @@ export class AttendanceController {
   }
 
   @Patch('attendance/:id')
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({ summary: 'Update an attendance record 🔒' })
   @ApiResponse({ status: 200, description: 'Attendance updated' })
   @ApiResponse({ status: 404, description: 'Attendance or member not found' })
@@ -84,6 +89,7 @@ export class AttendanceController {
 
   @Delete('attendance/:id')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({ summary: 'Delete an attendance record 🔒' })
   @ApiResponse({ status: 200, description: 'Record deleted' })
   @ApiResponse({ status: 404, description: 'Attendance record not found' })

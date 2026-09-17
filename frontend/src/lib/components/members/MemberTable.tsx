@@ -76,7 +76,7 @@ export const MemberTable: React.FC<MemberTableProps> = ({
                 </td>
                 <td className="py-3.5 px-4">
                   <span className="text-on-surface font-medium">
-                    {member.facultyDepartment || 'General'}
+                    {member.facultyDepartment || '—'}
                   </span>
                 </td>
                 <td className="py-3.5 px-4 whitespace-nowrap">

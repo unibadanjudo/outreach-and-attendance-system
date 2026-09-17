@@ -25,6 +25,8 @@ export const HEADER_ALIASES: Record<string, keyof Member | 'memberId'> = {
   startdate: 'judoStartDate',
   primarymotivationfortrainingjudo: 'motivation',
   motivation: 'motivation',
+  howdidyouhearaboutjudo: 'howDidYouHearAboutUs',
+  howdidyouhearaboutus: 'howDidYouHearAboutUs',
   beltrank: 'beltRank',
   belt: 'beltRank',
   rank: 'beltRank',
@@ -38,7 +40,8 @@ export const HEADER_ALIASES: Record<string, keyof Member | 'memberId'> = {
 };
 
 export function cleanHeaderKey(rawHeader: string): string {
-  return rawHeader.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const firstLine = rawHeader.split(/\r?\n/)[0];
+  return firstLine.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 export function sanitizePhoneNumber(phone: string): string {
@@ -79,13 +82,32 @@ export function generateMemberId(
   return `mem_gen_${fallbackIndex}_${Date.now()}`;
 }
 
+export function resolveHeaderKey(rawHeader: string): keyof Member | 'memberId' | null {
+  const cleaned = cleanHeaderKey(rawHeader);
+  if (HEADER_ALIASES[cleaned]) return HEADER_ALIASES[cleaned];
+
+  const fullCleaned = rawHeader.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (HEADER_ALIASES[fullCleaned]) return HEADER_ALIASES[fullCleaned];
+
+  if (cleaned.startsWith('faculty') || cleaned.includes('department')) return 'facultyDepartment';
+  if (fullCleaned.includes('startedjudo') || fullCleaned.includes('datejoined') || fullCleaned.includes('startdate')) return 'judoStartDate';
+  if (cleaned.includes('dateofbirth') || cleaned === 'dob' || cleaned.includes('birthdate')) return 'dateOfBirth';
+  if (fullCleaned.includes('motivation')) return 'motivation';
+  if (fullCleaned.includes('howdidyouhear') || fullCleaned.includes('hearabout')) return 'howDidYouHearAboutUs';
+  if (cleaned.includes('nickname') || cleaned === 'nick') return 'nickname';
+  if (cleaned.includes('othernames') || cleaned.includes('middlename')) return 'otherNames';
+  if (cleaned.includes('firstname')) return 'firstName';
+  if (cleaned.includes('lastname') || cleaned.includes('surname')) return 'lastName';
+  if (cleaned.includes('matric')) return 'matricNumber';
+  if (cleaned.includes('phone') || cleaned.includes('whatsapp')) return 'phoneNumber';
+  if (cleaned.includes('belt') || cleaned.includes('rank')) return 'beltRank';
+  return null;
+}
+
 export function mapHeadersToMemberKeys(
   headers: string[],
 ): (keyof Member | 'memberId' | null)[] {
-  return headers.map((header) => {
-    const cleaned = cleanHeaderKey(header);
-    return HEADER_ALIASES[cleaned] ?? null;
-  });
+  return headers.map((header) => resolveHeaderKey(header));
 }
 
 export function rowToMember(
@@ -119,6 +141,7 @@ export function rowToMember(
     dateOfBirth: partial.dateOfBirth || '',
     judoStartDate: partial.judoStartDate || '',
     motivation: partial.motivation || '',
+    howDidYouHearAboutUs: partial.howDidYouHearAboutUs || '',
     beltRank: partial.beltRank || 'Unranked',
     createdAt: partial.createdAt || new Date().toISOString(),
     updatedAt: partial.createdAt || new Date().toISOString(),

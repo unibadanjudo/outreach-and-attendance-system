@@ -1,15 +1,32 @@
 export function formatDate(dateString?: string | null): string {
   if (!dateString) return '—';
+  const trimmed = dateString.trim();
+  if (!trimmed) return '—';
+
+  // Support Nigerian/UK DD/MM/YYYY format commonly used in Google Forms
+  const dmyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmyMatch) {
+    const [, day, month, year] = dmyMatch;
+    const d = new Date(Number(year), Number(month) - 1, Number(day));
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+  }
+
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
+    const d = new Date(trimmed);
+    if (isNaN(d.getTime())) return trimmed;
     return d.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   } catch {
-    return dateString;
+    return trimmed;
   }
 }
 

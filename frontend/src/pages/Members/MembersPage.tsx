@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useMembersList } from '../../lib/hooks/useMembers';
+import { useAuthStore } from '../../lib/stores/useAuthStore';
+import { canManageMembers } from '../../lib/types/auth.types';
 import { MemberFilters } from '../../lib/components/members/MemberFilters';
 import { MemberTable } from '../../lib/components/members/MemberTable';
 import { EditMemberModal } from '../../lib/components/members/EditMemberModal';
@@ -10,6 +12,8 @@ import { Button } from '../../lib/components/common/Button';
 import type { Member } from '../../lib/types';
 
 export const MembersPage: React.FC = () => {
+  const { user } = useAuthStore();
+  const canManage = canManageMembers(user?.role);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [faculty, setFaculty] = useState('ALL');
@@ -116,8 +120,8 @@ export const MembersPage: React.FC = () => {
         <div className="flex flex-col gap-4">
           <MemberTable
             members={data.items}
-            onEditMember={setEditingMember}
-            onEditBeltRank={setRankingMember}
+            onEditMember={canManage ? setEditingMember : undefined}
+            onEditBeltRank={canManage ? setRankingMember : undefined}
           />
 
           {/* Pagination Strip */}

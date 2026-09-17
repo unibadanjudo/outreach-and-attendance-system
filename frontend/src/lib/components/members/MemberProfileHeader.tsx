@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Phone, MessageSquare, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { canManageMembers } from '../../types/auth.types';
 import { BeltBadge, ActivityStatusBadge } from '../common/Badge';
 import { formatWhatsAppUrl, formatPhone } from '../../utils/formatters';
 import { EditMemberModal } from './EditMemberModal';
@@ -17,6 +19,8 @@ export const MemberProfileHeader: React.FC<MemberProfileHeaderProps> = ({
   onContactClick,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const canManage = canManageMembers(user?.role);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBeltModalOpen, setIsBeltModalOpen] = useState(false);
 
@@ -60,7 +64,7 @@ export const MemberProfileHeader: React.FC<MemberProfileHeaderProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-secondary font-body-sm text-xs mt-1">
-              <span>{member.facultyDepartment || 'Faculty of Education'}</span>
+              <span>{member.facultyDepartment || 'Faculty / Dept Not Set'}</span>
               <span>•</span>
               <span className="font-mono">{member.matricNumber || 'Matric N/A'}</span>
               <span>•</span>
@@ -69,27 +73,31 @@ export const MemberProfileHeader: React.FC<MemberProfileHeaderProps> = ({
 
             <div className="mt-2 flex items-center gap-2">
               <BeltBadge belt={member.beltRank} showKyu />
-              <button
-                onClick={() => setIsBeltModalOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-label-md text-primary hover:underline hover:text-primary-container cursor-pointer transition-colors"
-                title="Quick update Judo belt rank"
-              >
-                <span className="material-symbols-outlined text-sm">edit</span>
-                <span>Change Rank</span>
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => setIsBeltModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-xs font-label-md text-primary hover:underline hover:text-primary-container cursor-pointer transition-colors"
+                  title="Quick update Judo belt rank"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                  <span>Change Rank</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Action Triggers */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface px-3.5 py-2 rounded-xl font-label-md font-bold transition-all shadow-xs cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-base">edit_note</span>
-            <span>Edit Profile</span>
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="inline-flex items-center gap-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface px-3.5 py-2 rounded-xl font-label-md font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">edit_note</span>
+              <span>Edit Profile</span>
+            </button>
+          )}
 
           <a
             href={whatsappUrl}

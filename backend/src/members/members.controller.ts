@@ -7,6 +7,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../common/guards/authenticated.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../auth/interfaces/user-session.interface';
 import { QueryMembersDto } from './dto/query-members.dto';
 import {
   MemberSummaryDto,
@@ -20,7 +23,7 @@ import { MembersService } from './members.service';
 
 @ApiTags('Members')
 @ApiCookieAuth('uijudo.sid')
-@UseGuards(AuthenticatedGuard)
+@UseGuards(AuthenticatedGuard, RolesGuard)
 @Controller('members')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
@@ -92,6 +95,7 @@ export class MembersController {
   }
 
   @Patch(':id')
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({
     summary: 'Update member profile information in Google Sheets 🔒',
   })
@@ -110,6 +114,7 @@ export class MembersController {
   }
 
   @Patch(':id/belt-rank')
+  @Roles(Role.COACH, Role.CAPTAIN, Role.ADMIN)
   @ApiOperation({
     summary: 'Update member belt rank in Google Sheets 🔒',
   })

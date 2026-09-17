@@ -14,6 +14,22 @@ function getNextSessionInfo(): string {
   return `Today: ${days[day]} Session 5:00 PM (Dojo Mat A)`;
 }
 
+function getRoleBadgeClasses(role?: string): string {
+  const upper = role?.toUpperCase();
+  switch (upper) {
+    case 'ADMIN':
+      return 'bg-amber-700 text-white';
+    case 'COACH':
+      return 'bg-primary text-on-primary';
+    case 'CAPTAIN':
+      return 'bg-primary/90 text-on-primary';
+    case 'REACHER':
+      return 'bg-secondary-container text-on-secondary-container';
+    default:
+      return 'bg-surface-container-highest text-secondary';
+  }
+}
+
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
@@ -101,8 +117,8 @@ export const Header: React.FC = () => {
               <span className="font-label-lg text-label-lg text-on-surface leading-tight">
                 {user?.name || user?.firstName ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() : 'UI Judo Staff'}
               </span>
-              <span className="font-label-caps text-[9px] bg-primary text-on-primary px-1 py-0.2 rounded font-bold">
-                {user?.role || 'COACH'}
+              <span className={`font-label-caps text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${getRoleBadgeClasses(user?.role)}`}>
+                {user?.role || 'MEMBER'}
               </span>
             </div>
             <span className="font-body-sm text-[11px] text-secondary leading-tight">
