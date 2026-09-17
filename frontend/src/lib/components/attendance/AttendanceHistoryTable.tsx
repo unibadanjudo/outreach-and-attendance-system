@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Calendar, Search, Filter, RefreshCw, Clock } from 'lucide-react';
+import { Calendar, Search, RefreshCw } from 'lucide-react';
 import { useAttendanceList } from '../../hooks/useAttendance';
 import { useMembersList } from '../../hooks/useMembers';
 import { formatDate } from '../../utils/formatters';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
-import type { AttendanceStatus, TrainingSession } from '../../types';
+import { Pagination } from '../common/Pagination';
+import type { AttendanceStatus } from '../../types';
 
 export const AttendanceHistoryTable: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterSession, setFilterSession] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
 
   const { data: membersData } = useMembersList({ limit: 500 });
   const { data: attendanceData, isLoading, refetch, isFetching } = useAttendanceList({
@@ -67,6 +70,10 @@ export const AttendanceHistoryTable: React.FC = () => {
     return memberName.includes(q) || memberMatric.includes(q) || memberId.includes(q);
   });
 
+  const total = filteredItems.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const paginatedItems = filteredItems.slice((page - 1) * limit, page * limit);
+
   return (
     <section className="bg-surface-container-lowest rounded-xl shadow-xs border border-surface-container-low overflow-hidden flex flex-col">
       {/* Filter Controls Toolbar */}
@@ -77,7 +84,10 @@ export const AttendanceHistoryTable: React.FC = () => {
             <Search className="w-4 h-4 text-secondary absolute left-3 top-3 pointer-events-none" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Filter by judoka name, matric, or ID..."
               className="w-full bg-surface-container-lowest pl-9 pr-4 py-2 rounded-xl text-on-surface placeholder:text-secondary font-body-md text-body-md outline-none border border-transparent focus:border-primary shadow-xs"
             />
@@ -90,12 +100,18 @@ export const AttendanceHistoryTable: React.FC = () => {
             <input
               type="date"
               value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
+              onChange={(e) => {
+                setFilterDate(e.target.value);
+                setPage(1);
+              }}
               className="bg-transparent font-label-md text-on-surface font-semibold outline-none cursor-pointer text-xs"
             />
             {filterDate && (
               <button
-                onClick={() => setFilterDate('')}
+                onClick={() => {
+                  setFilterDate('');
+                  setPage(1);
+                }}
                 className="text-secondary hover:text-primary font-bold text-xs ml-1 cursor-pointer"
                 title="Clear date filter"
               >
@@ -109,7 +125,10 @@ export const AttendanceHistoryTable: React.FC = () => {
             <span className="font-label-caps text-secondary text-xs">Session:</span>
             <select
               value={filterSession}
-              onChange={(e) => setFilterSession(e.target.value)}
+              onChange={(e) => {
+                setFilterSession(e.target.value);
+                setPage(1);
+              }}
               className="bg-transparent font-label-md text-on-surface font-semibold outline-none cursor-pointer text-xs"
             >
               <option value="ALL">All Sessions</option>
@@ -129,7 +148,10 @@ export const AttendanceHistoryTable: React.FC = () => {
             <span className="font-label-caps text-secondary text-xs">Status:</span>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPage(1);
+              }}
               className="bg-transparent font-label-md text-on-surface font-semibold outline-none cursor-pointer text-xs"
             >
               <option value="ALL">All Statuses</option>
@@ -169,11 +191,12 @@ export const AttendanceHistoryTable: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse font-body-sm">
-            <thead>
-              <tr className="bg-surface-container-low text-secondary font-label-caps uppercase text-xs border-b border-surface-container-high">
-                <th className="py-3 px-4">Attendance Date</th>
+        <>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse font-body-sm">
+              <thead>
+                <tr className="bg-surface-container-low text-secondary font-label-caps uppercase text-xs border-b border-surface-container-high">
+                  <th className="py-3 px-4">Attendance Date</th>
                 <th className="py-3 px-4">Judoka Member</th>
                 <th className="py-3 px-4">Session</th>
                 <th className="py-3 px-4">Status</th>
@@ -182,7 +205,7 @@ export const AttendanceHistoryTable: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container-low">
-              {filteredItems.map((att) => {
+              {paginatedItems.map((att) => {
                 const memberInfo = getMemberInfo(att.memberId);
                 return (
                   <tr key={att.id} className="hover:bg-surface-container-low/40 transition-colors">
@@ -252,7 +275,23 @@ export const AttendanceHistoryTable: React.FC = () => {
             </tbody>
           </table>
         </div>
-      )}
+
+        {filteredItems.length > 0 && (
+          <div className="p-3 border-t border-surface-container-high bg-surface-container-low/20">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              itemsPerPage={limit}
+              onPageChange={setPage}
+              onItemsPerPageChange={setLimit}
+              itemsPerPageOptions={[10, 25, 50, 100]}
+              itemLabel="Attendance Logs"
+            />
+          </div>
+        )}
+      </>
+    )}
     </section>
   );
 };

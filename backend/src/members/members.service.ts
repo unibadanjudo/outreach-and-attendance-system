@@ -23,6 +23,7 @@ import { Member } from './models/member.model';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { AttendanceAnalyticsService } from '../attendance/services/attendance-analytics.service';
 import { InactivityService } from '../attendance/services/inactivity.service';
+import { ActivityStatus } from '../attendance/models/activity-status.enum';
 import { MemberActivityDetails } from '../attendance/models/attendance-analytics.model';
 import { buildMemberSummaryDto } from './utils/member-summary.util';
 
@@ -58,11 +59,29 @@ export class MembersService {
       );
     }
 
+    if (query.status && query.status !== 'ALL') {
+      const target = query.status.trim().toUpperCase();
+      const analyticsMap =
+        await this.attendanceAnalyticsService.getAllMembersAnalytics();
+      members = members.filter((m) => {
+        const analytics = analyticsMap.get(m.id);
+        const status = analytics
+          ? this.inactivityService.determineStatus(analytics)
+          : ActivityStatus.NEVER_ATTENDED;
+        return status === target;
+      });
+    }
+
     const total = members.length;
+    const totalPages = Math.ceil(total / limit) || 1;
     return {
       items: members.slice((page - 1) * limit, page * limit),
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 },
-    };
+      meta: { total, page, limit, totalPages },
+      total,
+      page,
+      limit,
+      totalPages,
+    } as any;
   }
 
   async findById(id: string): Promise<Member> {

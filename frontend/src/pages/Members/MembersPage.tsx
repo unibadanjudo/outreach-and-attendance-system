@@ -9,12 +9,14 @@ import { UpdateBeltRankModal } from '../../lib/components/members/UpdateBeltRank
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import { EmptyState } from '../../lib/components/common/EmptyState';
 import { Button } from '../../lib/components/common/Button';
+import { Pagination } from '../../lib/components/common/Pagination';
 import type { Member } from '../../lib/types';
 
 export const MembersPage: React.FC = () => {
   const { user } = useAuthStore();
   const canManage = canManageMembers(user?.role);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
   const [search, setSearch] = useState('');
   const [faculty, setFaculty] = useState('ALL');
   const [status, setStatus] = useState('ALL');
@@ -23,26 +25,17 @@ export const MembersPage: React.FC = () => {
 
   const { data, isLoading, isError, refetch } = useMembersList({
     page,
-    limit: 25,
+    limit,
     search: search || undefined,
     faculty: faculty !== 'ALL' ? faculty : undefined,
     status: status !== 'ALL' ? status : undefined,
   });
 
-  const totalPages = Math.ceil((data?.total ?? 0) / 25) || 1;
+  const total = data?.total ?? data?.meta?.total ?? 0;
+  const totalPages = data?.totalPages ?? data?.meta?.totalPages ?? (Math.ceil(total / limit) || 1);
 
-  const handleSearch = (val: string) => {
-    setSearch(val);
-    setPage(1);
-  };
-
-  const handleFaculty = (val: string) => {
-    setFaculty(val);
-    setPage(1);
-  };
-
-  const handleStatus = (val: string) => {
-    setStatus(val);
+  const updateFilter = (setter: React.Dispatch<React.SetStateAction<string>>) => (val: string) => {
+    setter(val);
     setPage(1);
   };
 
@@ -67,7 +60,7 @@ export const MembersPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex flex-col text-right">
             <span className="font-metric-lg text-primary leading-none">
-              {data?.total ?? 0}
+              {total}
             </span>
             <span className="font-label-caps text-secondary text-[10px]">
               TOTAL ENROLLED
@@ -79,11 +72,11 @@ export const MembersPage: React.FC = () => {
       {/* Filters Bar */}
       <MemberFilters
         search={search}
-        onSearchChange={handleSearch}
+        onSearchChange={updateFilter(setSearch)}
         faculty={faculty}
-        onFacultyChange={handleFaculty}
+        onFacultyChange={updateFilter(setFaculty)}
         status={status}
-        onStatusChange={handleStatus}
+        onStatusChange={updateFilter(setStatus)}
       />
 
       {/* Roster Table Content */}
@@ -124,31 +117,17 @@ export const MembersPage: React.FC = () => {
             onEditBeltRank={canManage ? setRankingMember : undefined}
           />
 
-          {/* Pagination Strip */}
-          <div className="flex items-center justify-between bg-surface-container-lowest px-4 py-3 rounded-xl border border-surface-container-low font-body-sm">
-            <span className="text-secondary">
-              Showing Page <strong className="text-on-surface">{page}</strong> of{' '}
-              <strong className="text-on-surface">{totalPages}</strong> ({data.total} Judokas)
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          {/* Pagination Controls */}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            itemsPerPage={limit}
+            onPageChange={setPage}
+            onItemsPerPageChange={setLimit}
+            itemsPerPageOptions={[10, 25, 50, 100]}
+            itemLabel="Judokas"
+          />
         </div>
       )}
 

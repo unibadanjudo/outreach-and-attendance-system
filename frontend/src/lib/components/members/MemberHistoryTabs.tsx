@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatDate } from '../../utils/date';
+import { Pagination } from '../common/Pagination';
 import type { Attendance, Outreach } from '../../types';
 
 interface MemberHistoryTabsProps {
@@ -12,6 +13,12 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
   outreachRecords = [],
 }) => {
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'OUTREACH'>('ATTENDANCE');
+  const [attPage, setAttPage] = useState(1);
+  const [outPage, setOutPage] = useState(1);
+  const pageSize = 10;
+
+  const paginatedAtt = attendanceRecords.slice((attPage - 1) * pageSize, attPage * pageSize);
+  const paginatedOut = outreachRecords.slice((outPage - 1) * pageSize, outPage * pageSize);
 
   return (
     <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-low shadow-xs overflow-hidden flex flex-col">
@@ -59,31 +66,36 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-container-low">
-                  {attendanceRecords.map((att) => (
+                  {paginatedAtt.map((att) => (
                     <tr key={att.id} className="hover:bg-surface-container-low/50">
-                      <td className="py-3 px-3 font-medium text-on-surface">
-                        {formatDate(att.attendanceDate)}
-                      </td>
-                      <td className="py-3 px-3 text-secondary">{att.trainingSession}</td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`font-label-caps px-2 py-0.5 rounded font-bold ${
-                            att.status === 'PRESENT'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-surface-container text-secondary'
-                          }`}
-                        >
+                      <td className="py-2.5 px-3 font-medium text-on-surface">{formatDate(att.attendanceDate)}</td>
+                      <td className="py-2.5 px-3 text-secondary">{att.trainingSession}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`font-label-caps px-2 py-0.5 rounded font-bold ${
+                          att.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-800' : 'bg-surface-container text-secondary'
+                        }`}>
                           {att.status}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-secondary text-xs">{att.recordedBy}</td>
-                      <td className="py-3 px-3 text-secondary text-xs italic">
-                        {att.notes || '—'}
-                      </td>
+                      <td className="py-2.5 px-3 text-secondary text-xs">{att.recordedBy}</td>
+                      <td className="py-2.5 px-3 text-secondary text-xs italic">{att.notes || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {attendanceRecords.length > pageSize && (
+                <div className="pt-3">
+                  <Pagination
+                    currentPage={attPage}
+                    totalPages={Math.ceil(attendanceRecords.length / pageSize)}
+                    totalItems={attendanceRecords.length}
+                    itemsPerPage={pageSize}
+                    onPageChange={setAttPage}
+                    itemLabel="Sessions"
+                  />
+                </div>
+              )}
             </div>
           )
         ) : outreachRecords.length === 0 ? (
@@ -92,7 +104,7 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {outreachRecords.map((out) => (
+            {paginatedOut.map((out) => (
               <div
                 key={out.id}
                 className="bg-surface-container-low/50 p-4 rounded-xl border border-surface-container flex flex-col gap-1.5"
@@ -117,6 +129,19 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
                 )}
               </div>
             ))}
+
+            {outreachRecords.length > pageSize && (
+              <div className="pt-2">
+                <Pagination
+                  currentPage={outPage}
+                  totalPages={Math.ceil(outreachRecords.length / pageSize)}
+                  totalItems={outreachRecords.length}
+                  itemsPerPage={pageSize}
+                  onPageChange={setOutPage}
+                  itemLabel="Logs"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

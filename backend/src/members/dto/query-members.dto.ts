@@ -20,6 +20,14 @@ export class QueryMembersDto {
   facultyDepartment?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by member activity status (ACTIVE, RECENTLY_INACTIVE, INACTIVE, etc.)',
+    example: 'ACTIVE',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
     description: 'Page number (1-based)',
     default: 1,
     minimum: 1,

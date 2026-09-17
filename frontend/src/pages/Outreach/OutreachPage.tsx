@@ -7,6 +7,7 @@ import { OutreachActionConsole } from '../../lib/components/outreach/OutreachAct
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import { EmptyState } from '../../lib/components/common/EmptyState';
 import { Button } from '../../lib/components/common/Button';
+import { Pagination } from '../../lib/components/common/Pagination';
 import type { OutreachQueueItem } from '../../lib/types';
 
 export const OutreachPage: React.FC = () => {
@@ -15,17 +16,19 @@ export const OutreachPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const [selectedItem, setSelectedItem] = useState<OutreachQueueItem | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const { data, isLoading, isError, refetch } = useOutreachQueue({
     isFollowUpDue: activeTab === 'FOLLOW_UP_DUE' ? true : undefined,
-    status:
-      activeTab !== 'ALL' && activeTab !== 'FOLLOW_UP_DUE'
-        ? (activeTab as any)
-        : undefined,
-    limit: 50,
+    status: activeTab !== 'ALL' && activeTab !== 'FOLLOW_UP_DUE' ? (activeTab as any) : undefined,
+    limit: 200,
   });
 
   const queueItems = data?.items || [];
+  const total = queueItems.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const paginatedItems = queueItems.slice((page - 1) * limit, page * limit);
 
   useEffect(() => {
     if (urlMemberId && queueItems.length > 0) {
@@ -41,12 +44,8 @@ export const OutreachPage: React.FC = () => {
       <div className="flex flex-col gap-6">
         <LoadingSkeleton variant="card" count={1} />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7">
-            <LoadingSkeleton variant="card" count={4} />
-          </div>
-          <div className="lg:col-span-5">
-            <LoadingSkeleton variant="card" count={1} />
-          </div>
+          <div className="lg:col-span-7"><LoadingSkeleton variant="card" count={4} /></div>
+          <div className="lg:col-span-5"><LoadingSkeleton variant="card" count={1} /></div>
         </div>
       </div>
     );
@@ -88,6 +87,7 @@ export const OutreachPage: React.FC = () => {
         onTabChange={(t) => {
           setActiveTab(t);
           setSelectedItem(null);
+          setPage(1);
         }}
         summary={data?.summary}
       />
@@ -111,12 +111,25 @@ export const OutreachPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Deck (7 Cols) */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 flex flex-col gap-4">
             <OutreachQueueDeck
-              items={queueItems}
+              items={paginatedItems}
               selectedMemberId={selectedItem?.member.id}
               onSelect={(item) => setSelectedItem(item)}
             />
+
+            {total > limit && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                itemsPerPage={limit}
+                onPageChange={setPage}
+                onItemsPerPageChange={setLimit}
+                itemsPerPageOptions={[5, 10, 20, 50]}
+                itemLabel="Judokas"
+              />
+            )}
           </div>
 
           {/* Right Console (5 Cols) */}
