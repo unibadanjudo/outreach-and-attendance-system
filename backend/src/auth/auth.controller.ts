@@ -38,7 +38,8 @@ export class AuthController {
     description: 'Redirects to frontend application',
   })
   async googleAuthCallback(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
+    const rawFrontend = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
+    const frontendUrl = rawFrontend.trim().replace(/\/+$/, '');
     const user = req.user as UserSession;
 
     if (!user || !(await this.authService.isEmailAuthorized(user.email))) {

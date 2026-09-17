@@ -17,10 +17,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
-  const frontendUrl = configService.get<string>(
-    'FRONTEND_URL',
-    'http://localhost:5173',
-  );
   const sessionSecret = configService.get<string>('SESSION_SECRET', 'secret');
 
   // Global Prefix
@@ -28,20 +24,44 @@ async function bootstrap() {
 
   // Trust reverse proxy for secure cookies on Render/Vercel
   const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.set('trust proxy', 1);
+  expressApp.set('trust proxy', true);
 
   // CORS Configuration
   const isProduction = nodeEnv === 'production';
+  const rawFrontendUrl = configService.get<string>(
+    'FRONTEND_URL',
+    'http://localhost:5173',
+  );
+  const frontendUrl = rawFrontendUrl.trim().replace(/\/+$/, '');
   const isLocalhost =
     frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
-  // When interacting with a remote frontend (e.g. on Vercel), cookies MUST use SameSite=None and Secure
-  const isSecure = !isLocalhost;
-  const allowedOrigins = isProduction && !isLocalhost
-    ? [frontendUrl]
-    : [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'];
+  const isSecure = isProduction || !isLocalhost;
+
+  const allowedOrigins = [
+    frontendUrl,
+    frontendUrl.replace('://', '://www.'),
+    frontendUrl.replace('://www.', '://'),
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+  ];
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (
+      requestOrigin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!requestOrigin) return callback(null, true);
+      const cleanOrigin = requestOrigin.trim().replace(/\/+$/, '');
+      if (
+        allowedOrigins.includes(cleanOrigin) ||
+        cleanOrigin === frontendUrl ||
+        (frontendUrl.includes('vercel.app') && cleanOrigin.endsWith('.vercel.app'))
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
