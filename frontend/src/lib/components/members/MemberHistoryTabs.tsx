@@ -4,21 +4,28 @@ import { Pagination } from '../common/Pagination';
 import type { Attendance, Outreach } from '../../types';
 
 interface MemberHistoryTabsProps {
-  attendanceRecords?: Attendance[];
-  outreachRecords?: Outreach[];
+  attendanceRecords?: Attendance[] | { items?: Attendance[] };
+  outreachRecords?: Outreach[] | { items?: Outreach[] };
 }
 
 export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
-  attendanceRecords = [],
-  outreachRecords = [],
+  attendanceRecords,
+  outreachRecords,
 }) => {
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'OUTREACH'>('ATTENDANCE');
   const [attPage, setAttPage] = useState(1);
   const [outPage, setOutPage] = useState(1);
   const pageSize = 10;
 
-  const paginatedAtt = attendanceRecords.slice((attPage - 1) * pageSize, attPage * pageSize);
-  const paginatedOut = outreachRecords.slice((outPage - 1) * pageSize, outPage * pageSize);
+  const attList: Attendance[] = Array.isArray(attendanceRecords)
+    ? attendanceRecords
+    : (attendanceRecords as any)?.items || [];
+  const outList: Outreach[] = Array.isArray(outreachRecords)
+    ? outreachRecords
+    : (outreachRecords as any)?.items || [];
+
+  const paginatedAtt = attList.slice((attPage - 1) * pageSize, attPage * pageSize);
+  const paginatedOut = outList.slice((outPage - 1) * pageSize, outPage * pageSize);
 
   return (
     <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-low shadow-xs overflow-hidden flex flex-col">
@@ -26,30 +33,22 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
       <div className="flex border-b border-surface-container-low bg-surface-container-low/40">
         <button
           onClick={() => setActiveTab('ATTENDANCE')}
-          className={`px-5 py-3.5 font-label-lg transition-colors cursor-pointer border-b-2 ${
-            activeTab === 'ATTENDANCE'
-              ? 'border-primary text-primary font-bold bg-surface-container-lowest'
-              : 'border-transparent text-secondary hover:text-on-surface'
-          }`}
+          className={`px-5 py-3.5 font-label-lg transition-colors cursor-pointer border-b-2 ${activeTab === 'ATTENDANCE' ? 'border-primary text-primary font-bold bg-surface-container-lowest' : 'border-transparent text-secondary hover:text-on-surface'}`}
         >
-          Attendance Record Log ({attendanceRecords.length})
+          Attendance Record Log ({attList.length})
         </button>
         <button
           onClick={() => setActiveTab('OUTREACH')}
-          className={`px-5 py-3.5 font-label-lg transition-colors cursor-pointer border-b-2 ${
-            activeTab === 'OUTREACH'
-              ? 'border-primary text-primary font-bold bg-surface-container-lowest'
-              : 'border-transparent text-secondary hover:text-on-surface'
-          }`}
+          className={`px-5 py-3.5 font-label-lg transition-colors cursor-pointer border-b-2 ${activeTab === 'OUTREACH' ? 'border-primary text-primary font-bold bg-surface-container-lowest' : 'border-transparent text-secondary hover:text-on-surface'}`}
         >
-          Outreach Communications ({outreachRecords.length})
+          Outreach Communications ({outList.length})
         </button>
       </div>
 
       {/* Tab Content */}
       <div className="p-4 sm:p-5">
         {activeTab === 'ATTENDANCE' ? (
-          attendanceRecords.length === 0 ? (
+          attList.length === 0 ? (
             <div className="text-center py-8 text-secondary font-body-sm">
               No training sessions recorded for this judoka yet.
             </div>
@@ -84,12 +83,12 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
                 </tbody>
               </table>
 
-              {attendanceRecords.length > pageSize && (
+              {attList.length > pageSize && (
                 <div className="pt-3">
                   <Pagination
                     currentPage={attPage}
-                    totalPages={Math.ceil(attendanceRecords.length / pageSize)}
-                    totalItems={attendanceRecords.length}
+                    totalPages={Math.ceil(attList.length / pageSize)}
+                    totalItems={attList.length}
                     itemsPerPage={pageSize}
                     onPageChange={setAttPage}
                     itemLabel="Sessions"
@@ -98,7 +97,7 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
               )}
             </div>
           )
-        ) : outreachRecords.length === 0 ? (
+        ) : outList.length === 0 ? (
           <div className="text-center py-8 text-secondary font-body-sm">
             No outreach or follow-up communications on record.
           </div>
@@ -130,12 +129,12 @@ export const MemberHistoryTabs: React.FC<MemberHistoryTabsProps> = ({
               </div>
             ))}
 
-            {outreachRecords.length > pageSize && (
+            {outList.length > pageSize && (
               <div className="pt-2">
                 <Pagination
                   currentPage={outPage}
-                  totalPages={Math.ceil(outreachRecords.length / pageSize)}
-                  totalItems={outreachRecords.length}
+                  totalPages={Math.ceil(outList.length / pageSize)}
+                  totalItems={outList.length}
                   itemsPerPage={pageSize}
                   onPageChange={setOutPage}
                   itemLabel="Logs"

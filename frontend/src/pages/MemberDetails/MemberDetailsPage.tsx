@@ -12,6 +12,7 @@ import { MemberHistoryTabs } from '../../lib/components/members/MemberHistoryTab
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import { EmptyState } from '../../lib/components/common/EmptyState';
 import { Button } from '../../lib/components/common/Button';
+import { ErrorBoundary } from '../../lib/components/common/ErrorBoundary';
 
 export const MemberDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,10 +61,12 @@ export const MemberDetailsPage: React.FC = () => {
       <MemberBioCard member={summaryQuery.data.member} />
 
       {/* Full Attendance & Outreach Log Tabs */}
-      <MemberHistoryTabs
-        attendanceRecords={attendanceQuery.data}
-        outreachRecords={outreachQuery.data}
-      />
+      <ErrorBoundary name="MemberHistoryTabs">
+        <MemberHistoryTabs
+          attendanceRecords={attendanceQuery.data}
+          outreachRecords={outreachQuery.data}
+        />
+      </ErrorBoundary>
     </div>
   );
 };

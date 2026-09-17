@@ -69,8 +69,14 @@ export const membersApi = {
   getById: (id: string) => api.get<Member>(`/members/${id}`),
   getSummary: (id: string) => api.get<MemberSummary>(`/members/${id}/summary`),
   getActivity: (id: string) => api.get<any>(`/members/${id}/activity`),
-  getAttendance: (id: string) => api.get<Attendance[]>(`/members/${id}/attendance`),
-  getOutreach: (id: string) => api.get<Outreach[]>(`/members/${id}/outreach`),
+  getAttendance: async (id: string): Promise<Attendance[]> => {
+    const res = await api.get<any>(`/members/${id}/attendance`);
+    return Array.isArray(res) ? res : res?.items || [];
+  },
+  getOutreach: async (id: string): Promise<Outreach[]> => {
+    const res = await api.get<any>(`/members/${id}/outreach`);
+    return Array.isArray(res) ? res : res?.items || [];
+  },
   update: (id: string, data: Partial<Member>) =>
     api.patch<Member>(`/members/${id}`, data),
   updateBeltRank: (id: string, beltRank: string) =>
