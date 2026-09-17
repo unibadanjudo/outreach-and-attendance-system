@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   GraduationCap,
   Calendar,
@@ -7,7 +6,9 @@ import {
   Megaphone,
   Hash,
 } from 'lucide-react';
-import { formatDate } from '../../utils/date';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { isReacher } from '../../types/auth.types';
+import { formatDate, formatDateOfBirth } from '../../utils/date';
 import type { Member } from '../../types';
 
 interface MemberBioCardProps {
@@ -15,6 +16,9 @@ interface MemberBioCardProps {
 }
 
 export const MemberBioCard: React.FC<MemberBioCardProps> = ({ member }) => {
+  const { user } = useAuthStore();
+  const reacher = isReacher(user?.role);
+
   return (
     <div className="bg-surface-container-lowest p-5 sm:p-6 rounded-2xl border border-surface-container-low shadow-xs flex flex-col gap-4">
       <div className="flex items-center justify-between pb-3 border-b border-surface-container-low">
@@ -66,11 +70,20 @@ export const MemberBioCard: React.FC<MemberBioCardProps> = ({ member }) => {
             <Calendar className="w-4 h-4" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="font-label-caps text-[11px] text-secondary font-semibold uppercase">
-              Date of Birth
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-label-caps text-[11px] text-secondary font-semibold uppercase">
+                Date of Birth
+              </span>
+              {reacher && (
+                <span className="text-[9px] font-label-caps text-secondary bg-surface-container px-1.5 py-0.2 rounded font-medium">
+                  Month &amp; Day
+                </span>
+              )}
+            </div>
             <span className="font-medium text-on-surface mt-0.5">
-              {member.dateOfBirth ? formatDate(member.dateOfBirth) || member.dateOfBirth : 'Not provided'}
+              {member.dateOfBirth
+                ? formatDateOfBirth(member.dateOfBirth, reacher)
+                : 'Not provided'}
             </span>
           </div>
         </div>
