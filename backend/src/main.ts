@@ -78,9 +78,8 @@ async function bootstrap() {
         httpOnly: true,
         secure: isSecure,
         sameSite: isSecure ? 'none' : 'lax',
-        partitioned: isSecure,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      } as any,
+      },
     }),
   );
 

@@ -17,7 +17,7 @@ export class AuthController {
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)

@@ -20,6 +20,8 @@ export class GoogleSheetsAllowedUsersRepository
   private readonly range: string;
   private readonly spreadsheetId: string;
   private isInitialized = false;
+  private cachedUsers: AllowedUser[] | null = null;
+  private cacheExpiresAt = 0;
 
   constructor(
     private readonly googleSheetsService: GoogleSheetsService,
@@ -46,19 +48,33 @@ export class GoogleSheetsAllowedUsersRepository
   }
 
   async findAll(): Promise<AllowedUser[]> {
-    await this.ensureInitialized();
-    const raw = await this.googleSheetsService.readRange(this.range);
-    if (!raw || raw.length <= 1) return [];
-
-    const headerKeys = mapHeadersToAllowedUserKeys(raw[0]);
-    const users: AllowedUser[] = [];
-
-    for (let i = 1; i < raw.length; i++) {
-      const user = rowToAllowedUser(headerKeys, raw[i]);
-      if (user) users.push(user);
+    const now = Date.now();
+    if (this.cachedUsers && now < this.cacheExpiresAt) {
+      return this.cachedUsers;
     }
 
-    return users;
+    try {
+      await this.ensureInitialized();
+      const raw = await this.googleSheetsService.readRange(this.range);
+      if (!raw || raw.length <= 1) return this.cachedUsers || [];
+
+      const headerKeys = mapHeadersToAllowedUserKeys(raw[0]);
+      const users: AllowedUser[] = [];
+
+      for (let i = 1; i < raw.length; i++) {
+        const user = rowToAllowedUser(headerKeys, raw[i]);
+        if (user) users.push(user);
+      }
+
+      this.cachedUsers = users;
+      this.cacheExpiresAt = now + 60_000; // Cache for 60 seconds
+      return users;
+    } catch (err: unknown) {
+      if (this.cachedUsers) {
+        return this.cachedUsers;
+      }
+      throw err;
+    }
   }
 
   async findByEmail(email: string): Promise<AllowedUser | null> {
