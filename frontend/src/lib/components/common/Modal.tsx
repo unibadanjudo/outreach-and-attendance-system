@@ -46,7 +46,7 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         className="fixed inset-0"
         onClick={onClose}
@@ -56,10 +56,13 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative w-full bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden z-10 flex flex-col max-h-[90vh]',
+          'relative w-full bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh] sm:max-h-[85vh] animate-in slide-in-from-bottom duration-250 sm:slide-in-from-bottom-0 sm:zoom-in-95',
           maxWidths[maxWidth],
         )}
       >
+        {/* Mobile Pull / Drag Indicator */}
+        <div className="sm:hidden w-12 h-1 bg-surface-container-high rounded-full mx-auto mt-2.5 mb-1 shrink-0" />
+
         <div className="flex items-start justify-between p-space-md sm:p-space-lg border-b border-surface-container-low">
           <div className="flex flex-col gap-0.5">
             {title && (

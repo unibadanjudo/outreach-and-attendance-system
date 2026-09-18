@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useOutreachQueue } from '../../lib/hooks/useOutreach';
 import { OutreachFilterTabs } from '../../lib/components/outreach/OutreachFilterTabs';
 import { OutreachQueueDeck } from '../../lib/components/outreach/OutreachQueueDeck';
-import { OutreachActionConsole } from '../../lib/components/outreach/OutreachActionConsole';
+import { OutreachModal } from '../../lib/components/outreach/OutreachModal';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import { EmptyState } from '../../lib/components/common/EmptyState';
 import { Button } from '../../lib/components/common/Button';
@@ -34,19 +34,14 @@ export const OutreachPage: React.FC = () => {
     if (urlMemberId && queueItems.length > 0) {
       const found = queueItems.find((i) => i.member.id === urlMemberId);
       if (found) setSelectedItem(found);
-    } else if (!selectedItem && queueItems.length > 0) {
-      setSelectedItem(queueItems[0]);
     }
-  }, [urlMemberId, queueItems, selectedItem]);
+  }, [urlMemberId, queueItems]);
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-6">
         <LoadingSkeleton variant="card" count={1} />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7"><LoadingSkeleton variant="card" count={4} /></div>
-          <div className="lg:col-span-5"><LoadingSkeleton variant="card" count={1} /></div>
-        </div>
+        <LoadingSkeleton variant="card" count={4} />
       </div>
     );
   }
@@ -92,7 +87,7 @@ export const OutreachPage: React.FC = () => {
         summary={data?.summary}
       />
 
-      {/* 2-Column Split Workspace */}
+      {/* Triage Workspace Deck */}
       {isError ? (
         <EmptyState
           title="Unable to Load Outreach Queue"
@@ -109,40 +104,35 @@ export const OutreachPage: React.FC = () => {
           description="All inactive judokas in this category have been contacted or follow-ups are up to date."
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Deck (7 Cols) */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <OutreachQueueDeck
-              items={paginatedItems}
-              selectedMemberId={selectedItem?.member.id}
-              onSelect={(item) => setSelectedItem(item)}
-            />
+        <div className="flex flex-col gap-4">
+          <OutreachQueueDeck
+            items={paginatedItems}
+            selectedMemberId={selectedItem?.member.id}
+            onSelect={(item) => setSelectedItem(item)}
+          />
 
-            {total > limit && (
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={total}
-                itemsPerPage={limit}
-                onPageChange={setPage}
-                onItemsPerPageChange={setLimit}
-                itemsPerPageOptions={[5, 10, 20, 50]}
-                itemLabel="Judokas"
-              />
-            )}
-          </div>
-
-          {/* Right Console (5 Cols) */}
-          <div className="lg:col-span-5">
-            <OutreachActionConsole
-              item={selectedItem}
-              onSuccess={() => {
-                refetch();
-              }}
+          {total > limit && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              itemsPerPage={limit}
+              onPageChange={setPage}
+              onItemsPerPageChange={setLimit}
+              itemsPerPageOptions={[5, 10, 20, 50]}
+              itemLabel="Judokas"
             />
-          </div>
+          )}
         </div>
       )}
+
+      {/* Adaptive Modal for Outreach Action */}
+      <OutreachModal
+        isOpen={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };
