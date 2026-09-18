@@ -60,7 +60,9 @@ export class AuthController {
       });
     }
 
-    res.redirect(`${frontendUrl}/auth/callback?status=success`);
+    res.redirect(
+      `${frontendUrl}/auth/callback?status=success&token=${encodeURIComponent(req.sessionID)}`,
+    );
   }
 
   @Get('me')

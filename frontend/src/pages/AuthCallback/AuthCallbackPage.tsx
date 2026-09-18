@@ -12,6 +12,11 @@ export const AuthCallbackPage: React.FC = () => {
     const processCallback = async () => {
       const status = searchParams.get('status');
       const message = searchParams.get('message');
+      const token = searchParams.get('token');
+
+      if (token) {
+        localStorage.setItem('uijudo_token', token);
+      }
 
       if (status === 'error') {
         if (message === 'unauthorized') {

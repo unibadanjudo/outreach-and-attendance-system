@@ -9,6 +9,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { RateLimiterGuard } from './common/guards/rate-limiter.guard';
+import { sessionTokenMiddleware } from './auth/middlewares/session-token.middleware';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -67,6 +68,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   });
 
+  // Session Bridge (Support cookie and Bearer header session restoration)
+  app.use(sessionTokenMiddleware(sessionSecret));
+
   // Session Management (Secure HTTP-Only Cookies)
   app.use(
     session({
@@ -78,8 +82,9 @@ async function bootstrap() {
         httpOnly: true,
         secure: isSecure,
         sameSite: isSecure ? 'none' : 'lax',
+        partitioned: isSecure,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      },
+      } as any,
     }),
   );
 

@@ -29,6 +29,11 @@ export async function request<T>(
     headers.set('Accept', 'application/json');
   }
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('uijudo_token') : null;
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   const response = await fetch(url, {
     ...options,
     headers,

@@ -57,13 +57,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       isInitialized: true,
     }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    localStorage.removeItem('uijudo_token');
     set({
       user: null,
       isAuthenticated: false,
       isLoading: false,
       isInitialized: true,
-    }),
+    });
+  },
 
   logout: async () => {
     try {
@@ -71,6 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (e) {
       console.warn('Logout API error:', e);
     } finally {
+      localStorage.removeItem('uijudo_token');
       set({ user: null, isAuthenticated: false, isInitialized: true });
       window.location.href = '/login';
     }
