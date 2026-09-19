@@ -17,6 +17,17 @@ export const UpdateBeltRankModal: React.FC<UpdateBeltRankModalProps> = ({
   onClose,
   member,
 }) => {
+  // Keep last active member so exit transitions can play smoothly when parent sets member to null
+  const [activeMember, setActiveMember] = useState(member);
+
+  React.useEffect(() => {
+    if (member) {
+      setActiveMember(member);
+    }
+  }, [member]);
+
+  const currentMember = member || activeMember;
+
   const [beltRank, setBeltRank] = useState<string>(member?.beltRank || 'Unranked');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -24,19 +35,19 @@ export const UpdateBeltRankModal: React.FC<UpdateBeltRankModalProps> = ({
 
   // Keep state synced when member changes
   React.useEffect(() => {
-    if (member) {
-      setBeltRank(member.beltRank || 'Unranked');
+    if (currentMember) {
+      setBeltRank(currentMember.beltRank || 'Unranked');
       setErrorMsg(null);
     }
-  }, [member, isOpen]);
+  }, [currentMember?.id, isOpen]);
 
-  if (!member) return null;
+  if (!currentMember) return null;
 
   const handleSave = async () => {
     setErrorMsg(null);
     try {
       await mutation.mutateAsync({
-        id: member.id,
+        id: currentMember.id,
         beltRank,
       });
       onClose();
@@ -61,18 +72,18 @@ export const UpdateBeltRankModal: React.FC<UpdateBeltRankModalProps> = ({
         {/* Judoka Preview Card */}
         <div className="flex items-center gap-3 bg-surface-container-low p-3.5 rounded-xl border border-surface-container">
           <div className="w-11 h-11 rounded-xl bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm shrink-0">
-            {member.firstName[0]}
-            {member.lastName[0]}
+            {currentMember.firstName[0]}
+            {currentMember.lastName[0]}
           </div>
           <div className="flex flex-col min-w-0">
             <span className="font-label-lg text-on-surface font-bold truncate">
-              {member.firstName} {member.lastName}
+              {currentMember.firstName} {currentMember.lastName}
             </span>
             <div className="flex items-center gap-2 text-secondary font-body-sm text-xs">
-              <span>{member.matricNumber || 'Matric N/A'}</span>
+              <span>{currentMember.matricNumber || 'Matric N/A'}</span>
               <span>•</span>
               <span>Current:</span>
-              <BeltBadge belt={member.beltRank} showKyu />
+              <BeltBadge belt={currentMember.beltRank} showKyu />
             </div>
           </div>
         </div>

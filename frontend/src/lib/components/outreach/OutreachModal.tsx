@@ -24,6 +24,17 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
 }) => {
   const createMutation = useCreateOutreach();
 
+  // Keep last active item so exit transitions can play smoothly when parent sets item to null
+  const [activeItem, setActiveItem] = useState(item);
+
+  useEffect(() => {
+    if (item) {
+      setActiveItem(item);
+    }
+  }, [item]);
+
+  const currentItem = item || activeItem;
+
   const [method, setMethod] = useState<ContactMethod>('WHATSAPP');
   const [status, setStatus] = useState<OutreachStatus>('RESPONDED');
   const [notes, setNotes] = useState('');
@@ -31,22 +42,22 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
   const [followUpDate, setFollowUpDate] = useState('');
 
   useEffect(() => {
-    if (item) {
-      setNotes(`Spoke with ${item.member.firstName}. `);
+    if (currentItem) {
+      setNotes(`Spoke with ${currentItem.member.firstName}. `);
       setResponse('');
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 7);
       setFollowUpDate(defaultDate.toISOString().slice(0, 10));
     }
-  }, [item]);
+  }, [currentItem?.member?.id]);
 
-  if (!item) return null;
+  if (!currentItem) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createMutation.mutateAsync({
-        memberId: item.member.id,
+        memberId: currentItem.member.id,
         contactMethod: method,
         status,
         message: notes,
@@ -54,7 +65,7 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
         nextFollowUpDate: followUpDate || undefined,
       });
 
-      toast.success(`Outreach logged for ${item.member.firstName}!`);
+      toast.success(`Outreach logged for ${currentItem.member.firstName}!`);
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -62,7 +73,7 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
     }
   };
 
-  const member = item.member;
+  const member = currentItem.member;
   const whatsAppUrl = formatWhatsAppUrl(member.phoneNumber, `Hello ${member.firstName}, this is UI Judo Club checking in!`);
 
   return (
@@ -79,7 +90,7 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
                 <span className="font-label-lg font-bold text-on-surface">{formatPhone(member.phoneNumber)}</span>
                 <BeltBadge belt={member.beltRank} showKyu />
               </div>
-              <span className="font-body-sm text-secondary text-xs">{member.facultyDepartment} • {item.daysInactive ?? 0} days inactive</span>
+              <span className="font-body-sm text-secondary text-xs">{member.facultyDepartment} • {currentItem.daysInactive ?? 0} days inactive</span>
             </div>
           </div>
 
@@ -98,7 +109,7 @@ export const OutreachModal: React.FC<OutreachModalProps> = ({
         {/* Strategy Context Banner */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/15 text-xs text-on-surface">
           <AlertCircle className="w-4 h-4 text-primary shrink-0" />
-          <span><strong className="font-semibold text-primary">Recommended Action:</strong> {item.recommendedAction}</span>
+          <span><strong className="font-semibold text-primary">Recommended Action:</strong> {currentItem.recommendedAction}</span>
         </div>
 
         {/* Form Fields */}

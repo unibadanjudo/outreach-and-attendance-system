@@ -17,32 +17,43 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   onClose,
   member,
 }) => {
+  // Keep last active member so exit transitions can play smoothly when parent sets member to null
+  const [activeMember, setActiveMember] = useState(member);
+
+  useEffect(() => {
+    if (member) {
+      setActiveMember(member);
+    }
+  }, [member]);
+
+  const currentMember = member || activeMember;
+
   const [formData, setFormData] = useState<Partial<Member>>({});
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const mutation = useUpdateMember();
 
   useEffect(() => {
-    if (member) {
+    if (currentMember) {
       setFormData({
-        firstName: member.firstName || '',
-        lastName: member.lastName || '',
-        otherNames: member.otherNames || '',
-        nickname: member.nickname || '',
-        phoneNumber: member.phoneNumber || '',
-        facultyDepartment: member.facultyDepartment || '',
-        matricNumber: member.matricNumber || '',
-        dateOfBirth: member.dateOfBirth || '',
-        judoStartDate: member.judoStartDate || '',
-        motivation: member.motivation || '',
-        howDidYouHearAboutUs: member.howDidYouHearAboutUs || '',
-        beltRank: member.beltRank || 'Unranked',
+        firstName: currentMember.firstName || '',
+        lastName: currentMember.lastName || '',
+        otherNames: currentMember.otherNames || '',
+        nickname: currentMember.nickname || '',
+        phoneNumber: currentMember.phoneNumber || '',
+        facultyDepartment: currentMember.facultyDepartment || '',
+        matricNumber: currentMember.matricNumber || '',
+        dateOfBirth: currentMember.dateOfBirth || '',
+        judoStartDate: currentMember.judoStartDate || '',
+        motivation: currentMember.motivation || '',
+        howDidYouHearAboutUs: currentMember.howDidYouHearAboutUs || '',
+        beltRank: currentMember.beltRank || 'Unranked',
       });
       setErrorMsg(null);
     }
-  }, [member, isOpen]);
+  }, [currentMember?.id, isOpen]);
 
-  if (!member) return null;
+  if (!currentMember) return null;
 
   const handleChange = (field: keyof Member, val: string) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
@@ -59,7 +70,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
     try {
       await mutation.mutateAsync({
-        id: member.id,
+        id: currentMember.id,
         data: formData,
       });
       onClose();

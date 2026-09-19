@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -19,13 +19,43 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'lg',
 }) => {
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleClose = React.useCallback(() => {
+    setIsAnimating(false);
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    let animFrame: number;
+
+    if (isOpen) {
+      setShouldRender(true);
+      animFrame = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setIsAnimating(true));
+      });
+    } else {
+      setIsAnimating(false);
+      timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+    }
+
+    return () => {
+      cancelAnimationFrame(animFrame);
+      clearTimeout(timer);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleClose();
       }
     };
-    if (isOpen) {
+    if (shouldRender) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
@@ -33,9 +63,9 @@ export const Modal: React.FC<ModalProps> = ({
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [shouldRender, isOpen, handleClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const maxWidths = {
     sm: 'max-w-sm',
@@ -46,22 +76,33 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-500 ease-out',
+        isAnimating
+          ? 'bg-black/50 backdrop-blur-xs'
+          : 'bg-black/0 backdrop-blur-none pointer-events-none',
+      )}
+    >
       <div
         className="fixed inset-0"
-        onClick={onClose}
+        onClick={handleClose}
         aria-hidden="true"
       />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative w-full bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh] sm:max-h-[85vh] animate-in slide-in-from-bottom duration-250 sm:slide-in-from-bottom-0 sm:zoom-in-95',
+          'relative px-3 py-5 w-full bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh] sm:max-h-[85vh]',
+          'transition-all duration-500 ease-out transform-gpu',
+          isAnimating
+            ? 'translate-y-0 opacity-100 scale-100'
+            : 'translate-y-full opacity-0 sm:translate-y-0 sm:scale-95',
           maxWidths[maxWidth],
         )}
       >
         {/* Mobile Pull / Drag Indicator */}
-        <div className="sm:hidden w-12 h-1 bg-surface-container-high rounded-full mx-auto mt-2.5 mb-1 shrink-0" />
+        <div className="sm:hidden w-12 h-1 bg-surface-container-high rounded-full mx-auto mt-1 mb-2 shrink-0" />
 
         <div className="flex items-start justify-between p-space-md sm:p-space-lg border-b border-surface-container-low">
           <div className="flex flex-col gap-0.5">
@@ -77,7 +118,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1 rounded-lg text-secondary hover:bg-surface-container-low hover:text-on-surface transition-colors ml-2 cursor-pointer"
             aria-label="Close"
           >
