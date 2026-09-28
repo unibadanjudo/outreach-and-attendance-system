@@ -14,10 +14,10 @@ import { Pagination } from '../../lib/components/common/Pagination';
 import type { Member } from '../../lib/types';
 import {
   calculateAttendanceStats,
-  sortJudokas,
   type AttendanceSortField,
   type SortDirection,
 } from '../../lib/utils/attendance-stats.util';
+import { sortJudokas } from '../../lib/utils/attendance-sort.util';
 
 export const MembersPage: React.FC = () => {
   const { user } = useAuthStore();

@@ -1,6 +1,7 @@
 import type { Attendance, AttendanceStatus } from '../types/attendance.types';
 import type { Member } from '../types/members.types';
-import { parseBeltRank } from './belt';
+import { getMemberJoinDate } from './member-date.util';
+import { getMemberAliasKeys, getAllMemberAliases } from './member-alias.util';
 
 export interface JudokaAttendanceStats {
   memberId: string;
@@ -24,99 +25,6 @@ export type AttendanceSortField =
   | 'daysAbsent';
 
 export type SortDirection = 'asc' | 'desc';
-
-const BELT_WEIGHTS: Record<string, number> = {
-  unranked: 0,
-  white: 1,
-  yellow: 2,
-  orange: 3,
-  green: 4,
-  blue: 5,
-  brown: 6,
-  black: 7,
-};
-
-export function getBeltRankWeight(beltRank?: string): number {
-  const { baseId, dan } = parseBeltRank(beltRank);
-  const baseWeight = BELT_WEIGHTS[baseId] ?? 0;
-  if (baseId === 'black') {
-    return baseWeight + (dan || 1) * 0.1;
-  }
-  return baseWeight;
-}
-
-/**
- * Resolves the date a member joined / their record was created (YYYY-MM-DD).
- * Uses createdAt date with fallback to judoStartDate.
- */
-export function getMemberJoinDate(member?: Member | null): string {
-  if (!member) return '';
-  if (member.createdAt) {
-    const raw = member.createdAt.trim();
-    const datePart = raw.split(/[T\s]/)[0];
-    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-      return datePart;
-    }
-    const slashParts = datePart.split(/[-/]/);
-    if (slashParts.length === 3) {
-      if (slashParts[0].length === 4) {
-        return `${slashParts[0]}-${slashParts[1].padStart(2, '0')}-${slashParts[2].padStart(2, '0')}`;
-      }
-      if (slashParts[2].length === 4) {
-        return `${slashParts[2]}-${slashParts[1].padStart(2, '0')}-${slashParts[0].padStart(2, '0')}`;
-      }
-    }
-    const d = new Date(raw);
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0];
-    }
-  }
-  if (member.judoStartDate) {
-    const raw = member.judoStartDate.trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-    const slashParts = raw.split(/[-/]/);
-    if (slashParts.length === 3) {
-      if (slashParts[0].length === 4) {
-        return `${slashParts[0]}-${slashParts[1].padStart(2, '0')}-${slashParts[2].padStart(2, '0')}`;
-      }
-      if (slashParts[2].length === 4) {
-        return `${slashParts[2]}-${slashParts[1].padStart(2, '0')}-${slashParts[0].padStart(2, '0')}`;
-      }
-    }
-  }
-  return '';
-}
-
-/**
- * Checks if a member had not yet joined as of a given session date.
- */
-export function isMemberNotJoinedOnDate(member: Member, sessionDate?: string): boolean {
-  if (!sessionDate) return false;
-  const joinDate = getMemberJoinDate(member);
-  if (!joinDate) return false;
-  return sessionDate < joinDate;
-}
-
-/**
- * Normalizes an identifier string (extracts phone digits without country code).
- */
-function getPhoneDigits(val?: string): string[] {
-  if (!val) return [];
-  const digits = val.replace(/[^0-9]/g, '');
-  if (!digits) return [];
-  const results = [digits];
-  if (digits.startsWith('234') && digits.length >= 13) {
-    const local = digits.substring(3);
-    results.push(local);
-    results.push(`0${local}`);
-  }
-  if (digits.startsWith('0')) {
-    results.push(digits.substring(1));
-  } else {
-    results.push(`0${digits}`);
-  }
-  return Array.from(new Set(results));
-}
 
 /**
  * Calculates member attendance statistics starting from their join/created date.
@@ -205,19 +113,8 @@ export function calculateAttendanceStats(
   // Helper to map any record memberId alias to target member.id
   const memberLookup = new Map<string, string>();
   for (const m of members) {
-    memberLookup.set(m.id.toLowerCase(), m.id);
-    const fullName = `${m.firstName} ${m.lastName}`.toLowerCase().trim();
-    if (fullName) memberLookup.set(fullName, m.id);
-    const revName = `${m.lastName} ${m.firstName}`.toLowerCase().trim();
-    if (revName) memberLookup.set(revName, m.id);
-    if (m.matricNumber) {
-      memberLookup.set(m.matricNumber.toLowerCase().trim(), m.id);
-    }
-
-    const pDigits = getPhoneDigits(m.phoneNumber || m.id);
-    for (const d of pDigits) {
-      memberLookup.set(d, m.id);
-      memberLookup.set(`mem_${d}`, m.id);
+    for (const alias of getAllMemberAliases(m)) {
+      memberLookup.set(alias, m.id);
     }
   }
 
@@ -277,11 +174,9 @@ export function calculateAttendanceStats(
     };
 
     statsMap.set(memberId, statItem);
-    statsMap.set(memberId.toLowerCase(), statItem);
-    const pDigits = getPhoneDigits(memberId);
+    const pDigits = getMemberAliasKeys(memberId);
     for (const d of pDigits) {
       statsMap.set(d, statItem);
-      statsMap.set(`mem_${d}`, statItem);
     }
   }
 
@@ -289,100 +184,11 @@ export function calculateAttendanceStats(
   for (const m of members) {
     const statItem = statsMap.get(m.id) || statsMap.get(m.id.toLowerCase());
     if (statItem) {
-      if (m.phoneNumber) {
-        statsMap.set(m.phoneNumber, statItem);
-        for (const d of getPhoneDigits(m.phoneNumber)) {
-          statsMap.set(d, statItem);
-          statsMap.set(`mem_${d}`, statItem);
-        }
-      }
-      if (m.matricNumber) {
-        statsMap.set(m.matricNumber.toLowerCase(), statItem);
+      for (const alias of getAllMemberAliases(m)) {
+        statsMap.set(alias, statItem);
       }
     }
   }
 
   return { statsMap, totalClubSessions };
-}
-
-/**
- * Sorts judokas according to the selected criterion.
- */
-export function sortJudokas<T extends { member: Member }>(
-  items: T[],
-  sortBy: AttendanceSortField,
-  direction: SortDirection = 'asc',
-  statsMap?: Map<string, JudokaAttendanceStats>,
-): T[] {
-  const getStats = (m: Member): JudokaAttendanceStats => {
-    const defaultStats: JudokaAttendanceStats = {
-      memberId: m.id,
-      joinDate: getMemberJoinDate(m),
-      daysPresent: 0,
-      daysExcused: 0,
-      daysAbsent: 0,
-      daysNotJoined: 0,
-      totalTakenDays: 0,
-      totalClubSessions: 0,
-      ratioString: '0days/0',
-      percentage: 0,
-    };
-    if (!statsMap) return defaultStats;
-    const cleanId = m.id.toLowerCase();
-    const digits = (m.phoneNumber || m.id).replace(/[^0-9]/g, '');
-    return (
-      statsMap.get(m.id) ||
-      statsMap.get(cleanId) ||
-      (m.phoneNumber ? statsMap.get(m.phoneNumber) : undefined) ||
-      (digits ? statsMap.get(digits) : undefined) ||
-      (digits ? statsMap.get(`mem_${digits}`) : undefined) ||
-      (m.matricNumber ? statsMap.get(m.matricNumber.toLowerCase()) : undefined) ||
-      defaultStats
-    );
-  };
-
-  return [...items].sort((a, b) => {
-    let comparison = 0;
-
-    switch (sortBy) {
-      case 'name': {
-        const nameA = `${a.member.firstName} ${a.member.lastName}`.trim().toLowerCase();
-        const nameB = `${b.member.firstName} ${b.member.lastName}`.trim().toLowerCase();
-        comparison = nameA.localeCompare(nameB);
-        break;
-      }
-      case 'startDate': {
-        const dateA = a.member.judoStartDate || a.member.createdAt || '';
-        const dateB = b.member.judoStartDate || b.member.createdAt || '';
-        comparison = dateA.localeCompare(dateB);
-        break;
-      }
-      case 'belt': {
-        const weightA = getBeltRankWeight(a.member.beltRank);
-        const weightB = getBeltRankWeight(b.member.beltRank);
-        comparison = weightA - weightB;
-        break;
-      }
-      case 'daysPresent': {
-        const pA = getStats(a.member).daysPresent;
-        const pB = getStats(b.member).daysPresent;
-        comparison = pA - pB;
-        break;
-      }
-      case 'daysExcused': {
-        const eA = getStats(a.member).daysExcused;
-        const eB = getStats(b.member).daysExcused;
-        comparison = eA - eB;
-        break;
-      }
-      case 'daysAbsent': {
-        const abA = getStats(a.member).daysAbsent;
-        const abB = getStats(b.member).daysAbsent;
-        comparison = abA - abB;
-        break;
-      }
-    }
-
-    return direction === 'asc' ? comparison : -comparison;
-  });
 }

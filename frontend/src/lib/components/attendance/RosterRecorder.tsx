@@ -4,13 +4,12 @@ import { BeltBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatters';
 import type { AttendanceStatus, Member } from '../../types';
 import {
-  sortJudokas,
-  isMemberNotJoinedOnDate,
-  getMemberJoinDate,
   type AttendanceSortField,
   type SortDirection,
   type JudokaAttendanceStats,
 } from '../../utils/attendance-stats.util';
+import { sortJudokas } from '../../utils/attendance-sort.util';
+import { isMemberNotJoinedOnDate, getMemberJoinDate } from '../../utils/member-date.util';
 
 const isValidNickname = (nickname?: string | null): nickname is string => {
   if (!nickname) return false;

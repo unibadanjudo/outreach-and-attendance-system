@@ -6,7 +6,8 @@ import { formatDate } from '../../utils/formatters';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
 import { Pagination } from '../common/Pagination';
 import type { AttendanceStatus, Member } from '../../types';
-import { isMemberNotJoinedOnDate } from '../../utils/attendance-stats.util';
+import { isMemberNotJoinedOnDate } from '../../utils/member-date.util';
+import { getAllMemberAliases, getMemberAliasKeys } from '../../utils/member-alias.util';
 
 export const AttendanceHistoryTable: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -39,32 +40,22 @@ export const AttendanceHistoryTable: React.FC = () => {
         matric: m.matricNumber || m.phoneNumber || '',
         member: m,
       };
-      memberMap.set(m.id.toLowerCase(), info);
-      const digits = (m.phoneNumber || m.id).replace(/[^0-9]/g, '');
-      if (digits) {
-        memberMap.set(digits, info);
-        memberMap.set(`mem_${digits}`, info);
-        if (digits.startsWith('0')) {
-          memberMap.set(`mem_${digits.substring(1)}`, info);
-          memberMap.set(digits.substring(1), info);
-        } else {
-          memberMap.set(`mem_0${digits}`, info);
-          memberMap.set(`0${digits}`, info);
-        }
+      
+      for (const alias of getAllMemberAliases(m)) {
+        memberMap.set(alias, info);
       }
     });
   }
 
   const getMemberInfo = (memberId: string) => {
-    const cleanId = memberId.toLowerCase();
-    const digits = cleanId.replace(/[^0-9]/g, '');
-    return (
-      memberMap.get(cleanId) ||
-      (digits ? memberMap.get(digits) : undefined) ||
-      (digits ? memberMap.get(`mem_${digits}`) : undefined) ||
-      (digits && digits.startsWith('0') ? memberMap.get(`mem_${digits.substring(1)}`) : undefined) ||
-      (digits && !digits.startsWith('0') ? memberMap.get(`mem_0${digits}`) : undefined)
-    );
+    const cleanId = memberId.toLowerCase().trim();
+    if (memberMap.has(cleanId)) return memberMap.get(cleanId);
+    
+    const aliases = getMemberAliasKeys(memberId);
+    for (const alias of aliases) {
+      if (memberMap.has(alias)) return memberMap.get(alias);
+    }
+    return undefined;
   };
 
   const items = attendanceData?.items || [];

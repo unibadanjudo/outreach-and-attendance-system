@@ -12,10 +12,9 @@ import { RosterRecorder } from '../../lib/components/attendance/RosterRecorder';
 import { AttendanceHistoryTable } from '../../lib/components/attendance/AttendanceHistoryTable';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import type { AttendanceStatus, CreateAttendanceDto } from '../../lib/types';
-import {
-  calculateAttendanceStats,
-  isMemberNotJoinedOnDate,
-} from '../../lib/utils/attendance-stats.util';
+import { calculateAttendanceStats } from '../../lib/utils/attendance-stats.util';
+import { isMemberNotJoinedOnDate } from '../../lib/utils/member-date.util';
+import { getAllMemberAliases, getMemberAliasKeys } from '../../lib/utils/member-alias.util';
 
 function getDefaultSessionForDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -82,32 +81,24 @@ export const AttendancePage: React.FC = () => {
     const existingMap = new Map<string, AttendanceStatus>();
     if (attendanceData?.items) {
       attendanceData.items.forEach((att) => {
-        const id = att.memberId.toLowerCase();
-        existingMap.set(id, att.status);
-        const digits = id.replace(/[^0-9]/g, '');
-        if (digits) {
-          existingMap.set(digits, att.status);
-          existingMap.set(`mem_${digits}`, att.status);
-          if (digits.startsWith('0')) {
-            existingMap.set(`mem_${digits.substring(1)}`, att.status);
-            existingMap.set(digits.substring(1), att.status);
-          } else {
-            existingMap.set(`mem_0${digits}`, att.status);
-            existingMap.set(`0${digits}`, att.status);
-          }
+        existingMap.set(att.memberId.toLowerCase().trim(), att.status);
+        const aliases = getMemberAliasKeys(att.memberId);
+        for (const alias of aliases) {
+          existingMap.set(alias, att.status);
         }
       });
     }
 
     const nextStatuses: Record<string, AttendanceStatus> = {};
     membersData.items.forEach((m) => {
-      const mDigits = (m.phoneNumber || m.id).replace(/[^0-9]/g, '');
-      const existingStatus =
-        existingMap.get(m.id.toLowerCase()) ||
-        (mDigits ? existingMap.get(mDigits) : undefined) ||
-        (mDigits ? existingMap.get(`mem_${mDigits}`) : undefined) ||
-        (mDigits && mDigits.startsWith('0') ? existingMap.get(`mem_${mDigits.substring(1)}`) : undefined) ||
-        (mDigits && !mDigits.startsWith('0') ? existingMap.get(`mem_0${mDigits}`) : undefined);
+      let existingStatus: AttendanceStatus | undefined = undefined;
+      const aliases = getAllMemberAliases(m);
+      for (const alias of aliases) {
+        if (existingMap.has(alias)) {
+          existingStatus = existingMap.get(alias);
+          break;
+        }
+      }
 
       if (existingStatus) {
         nextStatuses[m.id] = existingStatus;

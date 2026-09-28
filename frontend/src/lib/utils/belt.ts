@@ -168,3 +168,23 @@ export function getBeltInfo(beltString?: string): BeltInfo {
   }
   return BELT_RANKS.unranked;
 }
+
+const BELT_WEIGHTS: Record<string, number> = {
+  unranked: 0,
+  white: 1,
+  yellow: 2,
+  orange: 3,
+  green: 4,
+  blue: 5,
+  brown: 6,
+  black: 7,
+};
+
+export function getBeltRankWeight(beltRank?: string): number {
+  const { baseId, dan } = parseBeltRank(beltRank);
+  const baseWeight = BELT_WEIGHTS[baseId] ?? 0;
+  if (baseId === 'black') {
+    return baseWeight + (dan || 1) * 0.1;
+  }
+  return baseWeight;
+}
