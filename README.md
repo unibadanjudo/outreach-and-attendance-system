@@ -1,6 +1,6 @@
 # UI Judo Club — Outreach & Attendance Management System
 
-A full-stack, enterprise-grade web application built for the **University of Ibadan Judo Club (UI Judo)** to manage dojo memberships, track training attendance, analyze participation trends, and automate proactive member outreach to combat attrition.
+A full stack, enterprise-grade web application built for the **University of Ibadan Judo Club (UI Judo)** to manage dojo memberships, track training attendance, analyze participation trends, and automate proactive member outreach to combat attrition.
 
 ---
 
