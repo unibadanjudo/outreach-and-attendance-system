@@ -1,17 +1,26 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, AlertTriangle, PhoneCall } from 'lucide-react';
-import type { DashboardSummary } from '../../types';
+import type { DashboardSummary, DashboardAttendance } from '../../types';
 
 interface SummaryCardsProps {
   summary?: DashboardSummary;
+  attendance?: DashboardAttendance;
 }
 
-export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary }) => {
+export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, attendance }) => {
   const navigate = useNavigate();
 
   const total = summary?.totalMembers ?? 0;
-  const active = summary?.activeMembers ?? 0;
+  // Use average present judokas per session instead of total
+  const avgPresent =
+    attendance?.averagePresentPerSession ??
+    attendance?.averageAttendancePerSession ??
+    (attendance?.totalPresent && attendance?.totalSessions && attendance.totalSessions > 0
+      ? Math.round((attendance.totalPresent / attendance.totalSessions) * 10) / 10
+      : attendance?.totalPresent ?? summary?.activeMembers ?? 0);
+
+  const active = typeof avgPresent === 'number' ? Math.round(avgPresent * 10) / 10 : 0;
   const inactive = (summary?.recentlyInactiveMembers ?? 0) + (summary?.inactiveMembers ?? 0);
   const queueCount = summary?.membersRequiringOutreach ?? 0;
   const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
@@ -45,13 +54,13 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary }) => {
 
       {/* Active Judokas */}
       <div
-        onClick={() => navigate('/members')}
+        onClick={() => navigate('/attendance')}
         className="group relative bg-surface-container-lowest p-4 rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between border border-surface-container-low"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-600" />
         <div className="flex items-start justify-between">
           <span className="font-label-caps text-secondary font-semibold">Active Tatami Judokas</span>
-          <span className="font-label-caps bg-[#DCFCE7] text-[#166534] px-2 py-0.5 rounded font-bold">Active {activePct}%</span>
+          <span className="font-label-caps bg-[#DCFCE7] text-[#166534] px-2 py-0.5 rounded font-bold">Avg {activePct}%</span>
         </div>
         <div className="my-2.5 flex items-baseline justify-between">
           <div className="flex items-baseline gap-2">
@@ -63,8 +72,8 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary }) => {
           </div>
         </div>
         <div className="pt-2 border-t border-surface-container-low flex items-center justify-between text-secondary font-body-sm">
-          <span>Attended within last 14 days</span>
-          <span className="font-label-caps font-bold text-emerald-700">Healthy</span>
+          <span>Avg present judokas per session</span>
+          <span className="font-label-caps font-bold text-emerald-700">Average</span>
         </div>
       </div>
 

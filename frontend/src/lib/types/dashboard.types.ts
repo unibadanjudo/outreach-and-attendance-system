@@ -23,12 +23,18 @@ export interface DashboardSummary {
 export interface DashboardAttendance {
   totalRecords: number;
   totalPresent: number;
+  totalAbsent?: number;
+  totalExcused?: number;
   attendanceLast7Days: number;
   attendanceLast30Days: number;
   sessionBreakdown: Record<string, number>;
-  statusBreakdown: Record<string, number>;
+  statusBreakdown?: Record<string, number>;
   dailyAttendanceLast14Days: Array<{ date: string; count: number }>;
   averageAttendancePerSession: number;
+  averagePresentPerSession?: number;
+  averageAbsentPerSession?: number;
+  averageExcusedPerSession?: number;
+  totalSessions?: number;
 }
 
 export interface DashboardOutreach {

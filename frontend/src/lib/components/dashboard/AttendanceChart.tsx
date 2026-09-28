@@ -20,6 +20,30 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = ({ data }) => {
   const avg = data?.averageAttendancePerSession ?? 0;
   const recent30 = data?.attendanceLast30Days ?? 0;
 
+  const totalSessions =
+    data?.totalSessions && data.totalSessions > 0
+      ? data.totalSessions
+      : (data?.dailyAttendanceLast14Days?.filter((d) => d.count > 0).length || 1);
+
+  const avgPresent =
+    data?.averagePresentPerSession ??
+    data?.averageAttendancePerSession ??
+    (data?.totalPresent && totalSessions > 0
+      ? Math.round((data.totalPresent / totalSessions) * 10) / 10
+      : 0);
+
+  const avgExcused =
+    data?.averageExcusedPerSession ??
+    (data?.totalExcused && totalSessions > 0
+      ? Math.round((data.totalExcused / totalSessions) * 10) / 10
+      : 0);
+
+  const avgAbsent =
+    data?.averageAbsentPerSession ??
+    (data?.totalAbsent && totalSessions > 0
+      ? Math.round((data.totalAbsent / totalSessions) * 10) / 10
+      : 0);
+
   return (
     <div className="bg-surface-container-lowest p-5 rounded-xl shadow-xs border border-surface-container-low flex flex-col justify-between">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-container-low">
@@ -106,47 +130,55 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = ({ data }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* Quick Session Breakdown Strip */}
+      {/* Logged Mat Entries Breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-surface-container-low">
-        {Object.entries(data?.sessionBreakdown || {})
-          .filter(([sess]) => sess !== 'NO_TRAINING')
-          .slice(0, 3)
-          .map(([sess, count], idx) => (
-            <div
-              key={sess}
-              className={`p-2.5 rounded-lg flex flex-col ${
-                idx === 2 ? 'bg-surface-container-high' : 'bg-surface-container-low'
-              }`}
-            >
-              <span
-                className={`font-label-caps ${
-                  idx === 2 ? 'text-primary font-bold' : 'text-secondary'
-                }`}
-              >
-                {sess} Mats
-              </span>
-              <span
-                className={`font-headline-sm ${
-                  idx === 2 ? 'text-primary' : 'text-on-surface'
-                }`}
-              >
-                {count} Judokas
-              </span>
-              <span
-                className={`font-body-sm ${
-                  idx === 2 ? 'text-primary font-medium' : 'text-secondary'
-                }`}
-              >
-                Logged mat entries
-              </span>
-            </div>
-          ))}
-        {(!data?.sessionBreakdown ||
-          Object.keys(data.sessionBreakdown).filter((k) => k !== 'NO_TRAINING').length === 0) && (
-          <div className="sm:col-span-3 text-center py-2 text-secondary font-body-sm">
-            No session entries logged yet for this cycle.
+        {/* Present */}
+        <div className="p-2.5 rounded-lg flex flex-col bg-surface-container-low border border-surface-container-high/60">
+          <div className="flex items-center justify-between">
+            <span className="font-label-caps text-[#166534] font-bold">
+              Present
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
           </div>
-        )}
+          <span className="font-headline-sm text-on-surface text-lg font-bold mt-1">
+            {avgPresent} Judokas
+          </span>
+          <span className="font-body-sm text-secondary text-xs">
+            Avg per session
+          </span>
+        </div>
+
+        {/* Excused */}
+        <div className="p-2.5 rounded-lg flex flex-col bg-surface-container-low border border-surface-container-high/60">
+          <div className="flex items-center justify-between">
+            <span className="font-label-caps text-[#92400E] font-bold">
+              Excused
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+          </div>
+          <span className="font-headline-sm text-on-surface text-lg font-bold mt-1">
+            {avgExcused} Judokas
+          </span>
+          <span className="font-body-sm text-secondary text-xs">
+            Avg per session
+          </span>
+        </div>
+
+        {/* Absent */}
+        <div className="p-2.5 rounded-lg flex flex-col bg-surface-container-low border border-surface-container-high/60">
+          <div className="flex items-center justify-between">
+            <span className="font-label-caps text-primary font-bold">
+              Absent
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+          </div>
+          <span className="font-headline-sm text-primary text-lg font-bold mt-1">
+            {avgAbsent} Judokas
+          </span>
+          <span className="font-body-sm text-secondary text-xs">
+            Avg per session
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -82,7 +82,10 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <SummaryCards summary={dashboard?.summary} />
+      <SummaryCards
+        summary={dashboard?.summary}
+        attendance={dashboard?.attendance}
+      />
 
       {/* 2-Column Split: Attendance Trend + Retention Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

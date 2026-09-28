@@ -35,7 +35,15 @@ export function calculateAttendanceDashboardMetrics(
   const sessionsCounted = new Set<string>();
 
   for (const r of records) {
-    if (r.status === AttendanceStatus.PRESENT) {
+    const status = String(r.status || '').toUpperCase();
+    const sess = r.trainingSession || TrainingSession.GENERAL;
+    sessionBreakdown[sess] = (sessionBreakdown[sess] || 0) + 1;
+
+    if (r.attendanceDate) {
+      sessionsCounted.add(`${r.attendanceDate}_${sess}`);
+    }
+
+    if (status === AttendanceStatus.PRESENT) {
       totalPresent++;
       const days = differenceInCalendarDays(r.attendanceDate, todayStr);
       if (days >= 0 && days <= 7) attendanceLast7Days++;
@@ -46,24 +54,29 @@ export function calculateAttendanceDashboardMetrics(
           (dailyMap.get(r.attendanceDate) || 0) + 1,
         );
       }
-      sessionsCounted.add(`${r.attendanceDate}_${r.trainingSession}`);
-    } else if (r.status === AttendanceStatus.ABSENT) {
+    } else if (status === AttendanceStatus.ABSENT) {
       totalAbsent++;
-    } else if (r.status === AttendanceStatus.EXCUSED) {
+    } else if (status === AttendanceStatus.EXCUSED) {
       totalExcused++;
     }
-
-    const sess = r.trainingSession || TrainingSession.GENERAL;
-    sessionBreakdown[sess] = (sessionBreakdown[sess] || 0) + 1;
   }
 
   const dailyAttendanceLast14Days: DailyAttendanceItemDto[] = Array.from(
     dailyMap.entries(),
   ).map(([date, count]) => ({ date, count }));
 
-  const avgPerSession =
-    sessionsCounted.size > 0
-      ? Math.round((totalPresent / sessionsCounted.size) * 10) / 10
+  const totalSessions = sessionsCounted.size;
+  const avgPresent =
+    totalSessions > 0
+      ? Math.round((totalPresent / totalSessions) * 10) / 10
+      : 0;
+  const avgAbsent =
+    totalSessions > 0
+      ? Math.round((totalAbsent / totalSessions) * 10) / 10
+      : 0;
+  const avgExcused =
+    totalSessions > 0
+      ? Math.round((totalExcused / totalSessions) * 10) / 10
       : 0;
 
   return {
@@ -75,6 +88,10 @@ export function calculateAttendanceDashboardMetrics(
     attendanceLast30Days,
     sessionBreakdown,
     dailyAttendanceLast14Days,
-    averageAttendancePerSession: avgPerSession,
+    averageAttendancePerSession: avgPresent,
+    averagePresentPerSession: avgPresent,
+    averageAbsentPerSession: avgAbsent,
+    averageExcusedPerSession: avgExcused,
+    totalSessions,
   };
 }

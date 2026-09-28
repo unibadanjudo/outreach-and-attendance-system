@@ -59,4 +59,28 @@ export class DashboardAttendanceDto {
     description: 'Average attendees per training session',
   })
   averageAttendancePerSession!: number;
+
+  @ApiProperty({
+    example: 7.5,
+    description: 'Average present attendees per training session',
+  })
+  averagePresentPerSession!: number;
+
+  @ApiProperty({
+    example: 2.1,
+    description: 'Average absent records per training session',
+  })
+  averageAbsentPerSession!: number;
+
+  @ApiProperty({
+    example: 0.8,
+    description: 'Average excused records per training session',
+  })
+  averageExcusedPerSession!: number;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Total distinct training sessions recorded',
+  })
+  totalSessions!: number;
 }
