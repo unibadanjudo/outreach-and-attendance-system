@@ -64,7 +64,7 @@ export const AttendancePage: React.FC = () => {
     limit: 500,
   });
 
-  const { data: allAttendanceData } = useAttendanceList({ limit: 1000 });
+  const { data: allAttendanceData } = useAttendanceList({ limit: 5000 });
 
   const { statsMap } = useMemo(
     () => calculateAttendanceStats(allAttendanceData?.items || [], membersData?.items || []),

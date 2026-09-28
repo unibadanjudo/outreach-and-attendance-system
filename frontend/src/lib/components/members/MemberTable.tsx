@@ -80,9 +80,15 @@ export const MemberTable: React.FC<MemberTableProps> = ({
                 </td>
                 <td className="py-3.5 px-4 whitespace-nowrap">
                   {(() => {
+                    const cleanId = member.id.toLowerCase();
+                    const digits = (member.phoneNumber || member.id).replace(/[^0-9]/g, '');
                     const stats =
                       statsMap?.get(member.id) ||
-                      statsMap?.get(member.id.toLowerCase());
+                      statsMap?.get(cleanId) ||
+                      (member.phoneNumber ? statsMap?.get(member.phoneNumber) : undefined) ||
+                      (digits ? statsMap?.get(digits) : undefined) ||
+                      (digits ? statsMap?.get(`mem_${digits}`) : undefined) ||
+                      (member.matricNumber ? statsMap?.get(member.matricNumber.toLowerCase()) : undefined);
                     const ratio = stats?.ratioString || '0days/0';
                     const pct = stats?.percentage || 0;
                     return (

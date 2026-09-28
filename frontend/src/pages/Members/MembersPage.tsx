@@ -40,11 +40,16 @@ export const MembersPage: React.FC = () => {
     status: status !== 'ALL' ? status : undefined,
   });
 
-  const { data: attendanceData } = useAttendanceList({ limit: 1000 });
+  const { data: allMembersData } = useMembersList({ limit: 500 });
+  const { data: attendanceData } = useAttendanceList({ limit: 5000 });
 
   const { statsMap } = useMemo(
-    () => calculateAttendanceStats(attendanceData?.items || [], data?.items || []),
-    [attendanceData, data?.items],
+    () =>
+      calculateAttendanceStats(
+        attendanceData?.items || [],
+        allMembersData?.items || data?.items || [],
+      ),
+    [attendanceData, allMembersData, data?.items],
   );
 
   const sortedMembers = useMemo(() => {

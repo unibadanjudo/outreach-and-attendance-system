@@ -8,7 +8,7 @@ export function filterAndPaginateAttendance(
   query: QueryAttendanceDto,
 ): PaginatedAttendanceDto {
   const page = Math.max(1, Number(query.page) || 1);
-  const limit = Math.min(500, Math.max(1, Number(query.limit) || 50));
+  const limit = Math.min(10000, Math.max(1, Number(query.limit) || 50));
   let records = allRecords;
 
   if (query.memberId) {

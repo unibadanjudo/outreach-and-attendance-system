@@ -20,6 +20,7 @@ import {
   isMemberMatch,
 } from '../utils/attendance-sheet.util';
 import { executeBatchUpsert } from '../utils/attendance-batch.util';
+import { resolveAttendanceTakenList } from '../utils/attendance-taken.util';
 
 @Injectable()
 export class GoogleSheetsAttendanceRepository implements AttendanceRepository {
@@ -58,10 +59,11 @@ export class GoogleSheetsAttendanceRepository implements AttendanceRepository {
     if (!raw || raw.length <= 1) return [];
 
     const headerKeys = mapHeadersToAttendanceKeys(raw[0]);
-    return raw
+    const records = raw
       .slice(1)
       .filter((row) => row.some((c) => c && c.trim().length > 0))
       .map((row, i) => rowToAttendance(headerKeys, row, i + 2));
+    return resolveAttendanceTakenList(records);
   }
 
   async findById(id: string): Promise<Attendance | null> {

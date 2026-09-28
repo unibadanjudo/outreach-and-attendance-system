@@ -43,9 +43,31 @@ export function getBeltRankWeight(beltRank?: string): number {
 }
 
 /**
+ * Normalizes an identifier string (extracts phone digits without country code).
+ */
+function getPhoneDigits(val?: string): string[] {
+  if (!val) return [];
+  const digits = val.replace(/[^0-9]/g, '');
+  if (!digits) return [];
+  const results = [digits];
+  // If Nigerian country code 234...
+  if (digits.startsWith('234') && digits.length >= 13) {
+    const local = digits.substring(3);
+    results.push(local);
+    results.push(`0${local}`);
+  }
+  if (digits.startsWith('0')) {
+    results.push(digits.substring(1));
+  } else {
+    results.push(`0${digits}`);
+  }
+  return Array.from(new Set(results));
+}
+
+/**
  * Calculates member attendance statistics.
  *
- * Important rules:
+ * Rules:
  * - A session is considered "attendance taken" if at least one judoka was marked PRESENT
  *   or if attendanceTaken is explicitly true.
  * - Sessions where all judokas are ABSENT (and attendance was not taken) are excluded.
@@ -73,9 +95,10 @@ export function calculateAttendanceStats(
   // 2. Identify sessions where attendance was actually taken
   const takenSessions = new Set<string>();
   for (const [key, sessionList] of sessionRecords.entries()) {
-    const hasPresent = sessionList.some(
-      (r) => String(r.status || '').toUpperCase() === 'PRESENT',
-    );
+    const hasPresent = sessionList.some((r) => {
+      const st = String(r.status || '').toUpperCase().trim();
+      return st === 'PRESENT' || st === 'P';
+    });
     const hasExplicitTaken = sessionList.some((r) => r.attendanceTaken === true);
     if (hasPresent || hasExplicitTaken) {
       takenSessions.add(key);
@@ -94,21 +117,22 @@ export function calculateAttendanceStats(
     memberStats.set(m.id, { daysPresent: 0, daysExcused: 0, daysAbsent: 0 });
   }
 
-  // Helper to find matching member ID from record memberId
+  // Helper to map any record memberId alias to target member.id
   const memberLookup = new Map<string, string>();
   for (const m of members) {
     memberLookup.set(m.id.toLowerCase(), m.id);
-    const digits = (m.phoneNumber || m.id).replace(/[^0-9]/g, '');
-    if (digits) {
-      memberLookup.set(digits, m.id);
-      memberLookup.set(`mem_${digits}`, m.id);
-      if (digits.startsWith('0')) {
-        memberLookup.set(`mem_${digits.substring(1)}`, m.id);
-        memberLookup.set(digits.substring(1), m.id);
-      } else {
-        memberLookup.set(`mem_0${digits}`, m.id);
-        memberLookup.set(`0${digits}`, m.id);
-      }
+    const fullName = `${m.firstName} ${m.lastName}`.toLowerCase().trim();
+    if (fullName) memberLookup.set(fullName, m.id);
+    const revName = `${m.lastName} ${m.firstName}`.toLowerCase().trim();
+    if (revName) memberLookup.set(revName, m.id);
+    if (m.matricNumber) {
+      memberLookup.set(m.matricNumber.toLowerCase().trim(), m.id);
+    }
+
+    const pDigits = getPhoneDigits(m.phoneNumber || m.id);
+    for (const d of pDigits) {
+      memberLookup.set(d, m.id);
+      memberLookup.set(`mem_${d}`, m.id);
     }
   }
 
@@ -128,10 +152,10 @@ export function calculateAttendanceStats(
         memberStats.set(targetMemberId, counts);
       }
 
-      const st = String(r.status || '').toUpperCase();
-      if (st === 'PRESENT') counts.daysPresent++;
-      else if (st === 'EXCUSED') counts.daysExcused++;
-      else if (st === 'ABSENT') counts.daysAbsent++;
+      const st = String(r.status || '').toUpperCase().trim();
+      if (st === 'PRESENT' || st === 'P') counts.daysPresent++;
+      else if (st === 'EXCUSED' || st === 'E') counts.daysExcused++;
+      else if (st === 'ABSENT' || st === 'A') counts.daysAbsent++;
     }
   }
 
@@ -154,10 +178,27 @@ export function calculateAttendanceStats(
 
     statsMap.set(memberId, statItem);
     statsMap.set(memberId.toLowerCase(), statItem);
-    const digits = memberId.replace(/[^0-9]/g, '');
-    if (digits) {
-      statsMap.set(digits, statItem);
-      statsMap.set(`mem_${digits}`, statItem);
+    const pDigits = getPhoneDigits(memberId);
+    for (const d of pDigits) {
+      statsMap.set(d, statItem);
+      statsMap.set(`mem_${d}`, statItem);
+    }
+  }
+
+  // Ensure every member can be retrieved by their member fields
+  for (const m of members) {
+    const statItem = statsMap.get(m.id) || statsMap.get(m.id.toLowerCase());
+    if (statItem) {
+      if (m.phoneNumber) {
+        statsMap.set(m.phoneNumber, statItem);
+        for (const d of getPhoneDigits(m.phoneNumber)) {
+          statsMap.set(d, statItem);
+          statsMap.set(`mem_${d}`, statItem);
+        }
+      }
+      if (m.matricNumber) {
+        statsMap.set(m.matricNumber.toLowerCase(), statItem);
+      }
     }
   }
 
@@ -189,8 +230,10 @@ export function sortJudokas<T extends { member: Member }>(
     return (
       statsMap.get(m.id) ||
       statsMap.get(cleanId) ||
+      (m.phoneNumber ? statsMap.get(m.phoneNumber) : undefined) ||
       (digits ? statsMap.get(digits) : undefined) ||
       (digits ? statsMap.get(`mem_${digits}`) : undefined) ||
+      (m.matricNumber ? statsMap.get(m.matricNumber.toLowerCase()) : undefined) ||
       defaultStats
     );
   };

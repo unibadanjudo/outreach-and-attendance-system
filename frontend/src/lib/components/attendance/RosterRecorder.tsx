@@ -153,9 +153,15 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
                 </span>
 
                 {statsMap && (() => {
+                  const cleanId = member.id.toLowerCase();
+                  const digits = (member.phoneNumber || member.id).replace(/[^0-9]/g, '');
                   const stats =
                     statsMap.get(member.id) ||
-                    statsMap.get(member.id.toLowerCase());
+                    statsMap.get(cleanId) ||
+                    (member.phoneNumber ? statsMap.get(member.phoneNumber) : undefined) ||
+                    (digits ? statsMap.get(digits) : undefined) ||
+                    (digits ? statsMap.get(`mem_${digits}`) : undefined) ||
+                    (member.matricNumber ? statsMap.get(member.matricNumber.toLowerCase()) : undefined);
                   if (!stats) return null;
                   return (
                     <div className="flex items-center gap-1.5 mt-1">

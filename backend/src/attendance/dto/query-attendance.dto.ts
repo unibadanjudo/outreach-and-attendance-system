@@ -69,11 +69,11 @@ export class QueryAttendanceDto {
   @IsOptional()
   page: number = 1;
 
-  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 500 })
+  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 10000 })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(500)
+  @Max(10000)
   @IsOptional()
   limit: number = 50;
 }
