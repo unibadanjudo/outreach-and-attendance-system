@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../lib/stores/useAuthStore';
@@ -7,6 +7,7 @@ import { useMembersList } from '../../lib/hooks/useMembers';
 import { useAttendanceList, useBatchRecordAttendance } from '../../lib/hooks/useAttendance';
 import { SessionControls } from '../../lib/components/attendance/SessionControls';
 import { AttendanceTallies } from '../../lib/components/attendance/AttendanceTallies';
+import { StickySaveAttendanceBar } from '../../lib/components/attendance/StickySaveAttendanceBar';
 import { RosterRecorder } from '../../lib/components/attendance/RosterRecorder';
 import { AttendanceHistoryTable } from '../../lib/components/attendance/AttendanceHistoryTable';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
@@ -34,12 +35,26 @@ export const AttendancePage: React.FC = () => {
   const [date, setDate] = useState(today);
   const [session, setSession] = useState(() => getDefaultSessionForDate(today));
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>({});
+  const [isScrolled, setIsScrolled] = useState(false);
+  const talliesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!canMark && activeView === 'RECORDER') {
       setActiveView('HISTORY');
     }
   }, [canMark, activeView]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!talliesRef.current) return;
+      const rect = talliesRef.current.getBoundingClientRect();
+      setIsScrolled(rect.bottom < 80);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeView]);
 
   const { data: membersData, isLoading: isLoadingMembers } = useMembersList({ limit: 500 });
   const { data: attendanceData, isLoading: isLoadingAttendance } = useAttendanceList({
@@ -245,15 +260,17 @@ export const AttendancePage: React.FC = () => {
           )}
 
           {/* Real-time Turnout Tallies & Commit CTA */}
-          <AttendanceTallies
-            present={presentCount}
-            absent={absentCount}
-            excused={excusedCount}
-            total={rosterItems.length}
-            date={date}
-            onSave={handleSaveSession}
-            isSaving={batchMutation.isPending || isLoadingAttendance}
-          />
+          <div ref={talliesRef}>
+            <AttendanceTallies
+              present={presentCount}
+              absent={absentCount}
+              excused={excusedCount}
+              total={rosterItems.length}
+              date={date}
+              onSave={handleSaveSession}
+              isSaving={batchMutation.isPending || isLoadingAttendance}
+            />
+          </div>
 
           {/* Mat Roster Interactive Recorder */}
           <RosterRecorder
@@ -263,6 +280,21 @@ export const AttendancePage: React.FC = () => {
             onMarkAllPresent={handleMarkAllPresent}
           />
         </>
+      )}
+
+      {/* Sticky Save Attendance Bar on Scroll */}
+      {canMark && activeView === 'RECORDER' && (
+        <StickySaveAttendanceBar
+          isVisible={isScrolled}
+          date={date}
+          session={session}
+          presentCount={presentCount}
+          absentCount={absentCount}
+          excusedCount={excusedCount}
+          totalCount={rosterItems.length}
+          onSave={handleSaveSession}
+          isSaving={batchMutation.isPending || isLoadingAttendance}
+        />
       )}
     </div>
   );

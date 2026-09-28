@@ -91,7 +91,7 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
       </div>
 
       {/* Roster List */}
-      <div className="divide-y divide-surface-container-low max-h-[600px] overflow-y-auto">
+      <div className="divide-y divide-surface-container-low">
         {filtered.map(({ member, status }) => (
           <div
             key={member.id}
