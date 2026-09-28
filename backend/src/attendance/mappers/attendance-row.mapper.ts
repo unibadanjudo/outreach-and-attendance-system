@@ -68,7 +68,9 @@ export function rowToAttendance(
           ? AttendanceStatus.ABSENT
           : upper === 'EXCUSED'
             ? AttendanceStatus.EXCUSED
-            : AttendanceStatus.PRESENT;
+            : upper === 'NOT_JOINED' || upper === 'NOT JOINED'
+              ? AttendanceStatus.NOT_JOINED
+              : AttendanceStatus.PRESENT;
     } else if (key === 'trainingSession') {
       const upper = value.toUpperCase();
       record.trainingSession = Object.values(TrainingSession).includes(

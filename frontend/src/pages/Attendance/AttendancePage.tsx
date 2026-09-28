@@ -12,7 +12,10 @@ import { RosterRecorder } from '../../lib/components/attendance/RosterRecorder';
 import { AttendanceHistoryTable } from '../../lib/components/attendance/AttendanceHistoryTable';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import type { AttendanceStatus, CreateAttendanceDto } from '../../lib/types';
-import { calculateAttendanceStats } from '../../lib/utils/attendance-stats.util';
+import {
+  calculateAttendanceStats,
+  isMemberNotJoinedOnDate,
+} from '../../lib/utils/attendance-stats.util';
 
 function getDefaultSessionForDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -108,6 +111,8 @@ export const AttendancePage: React.FC = () => {
 
       if (existingStatus) {
         nextStatuses[m.id] = existingStatus;
+      } else if (isMemberNotJoinedOnDate(m, date)) {
+        nextStatuses[m.id] = 'NOT_JOINED';
       } else if (session === 'NO_TRAINING') {
         nextStatuses[m.id] = 'EXCUSED';
       } else {
@@ -115,7 +120,7 @@ export const AttendancePage: React.FC = () => {
       }
     });
     setStatuses(nextStatuses);
-  }, [membersData, attendanceData, session]);
+  }, [membersData, attendanceData, session, date]);
 
   const handleDateChange = (newDate: string) => {
     setDate(newDate);
@@ -133,26 +138,42 @@ export const AttendancePage: React.FC = () => {
     if (!membersData?.items) return;
     const updated: Record<string, AttendanceStatus> = {};
     membersData.items.forEach((m) => {
-      updated[m.id] = 'PRESENT';
+      if (isMemberNotJoinedOnDate(m, date)) {
+        updated[m.id] = 'NOT_JOINED';
+      } else {
+        updated[m.id] = 'PRESENT';
+      }
     });
     setStatuses(updated);
-    toast.info('All judokas set to PRESENT');
+    toast.info('All active judokas set to PRESENT');
   };
 
   const handleMarkAllExcused = () => {
     if (!membersData?.items) return;
     const updated: Record<string, AttendanceStatus> = {};
     membersData.items.forEach((m) => {
-      updated[m.id] = 'EXCUSED';
+      if (isMemberNotJoinedOnDate(m, date)) {
+        updated[m.id] = 'NOT_JOINED';
+      } else {
+        updated[m.id] = 'EXCUSED';
+      }
     });
     setStatuses(updated);
-    toast.info('All judokas set to EXCUSED');
+    toast.info('All active judokas set to EXCUSED');
   };
 
-  const rosterItems = (membersData?.items || []).map((m) => ({
-    member: m,
-    status: statuses[m.id] || (session === 'NO_TRAINING' ? 'EXCUSED' : 'ABSENT'),
-  }));
+  const rosterItems = (membersData?.items || []).map((m) => {
+    const defaultStatus: AttendanceStatus = isMemberNotJoinedOnDate(m, date)
+      ? 'NOT_JOINED'
+      : session === 'NO_TRAINING'
+      ? 'EXCUSED'
+      : 'ABSENT';
+
+    return {
+      member: m,
+      status: statuses[m.id] || defaultStatus,
+    };
+  });
 
   const presentCount = rosterItems.filter((i) => i.status === 'PRESENT').length;
   const absentCount = rosterItems.filter((i) => i.status === 'ABSENT').length;
@@ -160,17 +181,22 @@ export const AttendancePage: React.FC = () => {
 
   const handleSaveSession = async () => {
     const isTaken = presentCount > 0 || session === 'NO_TRAINING';
-    const records: CreateAttendanceDto[] = rosterItems.map((item) => ({
-      memberId: item.member.id,
-      attendanceDate: date,
-      trainingSession: session,
-      status: item.status,
-      isCorrection: true,
-      attendanceTaken: isTaken,
-      notes: session === 'NO_TRAINING'
-        ? 'Training session did not hold today'
-        : 'Recorded via Dojo Command mat console',
-    }));
+    const records: CreateAttendanceDto[] = rosterItems.map((item) => {
+      const notJoined = isMemberNotJoinedOnDate(item.member, date);
+      return {
+        memberId: item.member.id,
+        attendanceDate: date,
+        trainingSession: session,
+        status: notJoined ? 'NOT_JOINED' : item.status,
+        isCorrection: true,
+        attendanceTaken: isTaken,
+        notes: notJoined
+          ? 'Member had not joined UI Judo club yet on this date'
+          : session === 'NO_TRAINING'
+          ? 'Training session did not hold today'
+          : 'Recorded via Dojo Command mat console',
+      };
+    });
 
     try {
       await batchMutation.mutateAsync(records);

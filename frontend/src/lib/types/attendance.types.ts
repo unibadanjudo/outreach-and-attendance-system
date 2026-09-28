@@ -1,4 +1,4 @@
-export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'EXCUSED';
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'EXCUSED' | 'NOT_JOINED';
 
 export type TrainingSession =
   | 'MONDAY'

@@ -5,7 +5,8 @@ import { useMembersList } from '../../hooks/useMembers';
 import { formatDate } from '../../utils/formatters';
 import { LoadingSkeleton } from '../common/LoadingSkeleton';
 import { Pagination } from '../common/Pagination';
-import type { AttendanceStatus } from '../../types';
+import type { AttendanceStatus, Member } from '../../types';
+import { isMemberNotJoinedOnDate } from '../../utils/attendance-stats.util';
 
 export const AttendanceHistoryTable: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -19,17 +20,24 @@ export const AttendanceHistoryTable: React.FC = () => {
   const { data: attendanceData, isLoading, refetch, isFetching } = useAttendanceList({
     date: filterDate || undefined,
     session: filterSession !== 'ALL' ? filterSession : undefined,
-    status: filterStatus !== 'ALL' ? (filterStatus as AttendanceStatus) : undefined,
+    status:
+      filterStatus !== 'ALL' && filterStatus !== 'NOT_JOINED'
+        ? (filterStatus as AttendanceStatus)
+        : undefined,
     limit: 500,
   });
 
-  const memberMap = new Map<string, { name: string; faculty: string; matric: string }>();
+  const memberMap = new Map<
+    string,
+    { name: string; faculty: string; matric: string; member: Member }
+  >();
   if (membersData?.items) {
     membersData.items.forEach((m) => {
       const info = {
         name: `${m.firstName} ${m.lastName}`.trim(),
         faculty: m.facultyDepartment || 'General',
         matric: m.matricNumber || m.phoneNumber || '',
+        member: m,
       };
       memberMap.set(m.id.toLowerCase(), info);
       const digits = (m.phoneNumber || m.id).replace(/[^0-9]/g, '');
@@ -61,9 +69,23 @@ export const AttendanceHistoryTable: React.FC = () => {
 
   const items = attendanceData?.items || [];
   const filteredItems = items.filter((att) => {
+    const info = getMemberInfo(att.memberId);
+    const isNotJoined =
+      att.status === 'NOT_JOINED' ||
+      (info?.member ? isMemberNotJoinedOnDate(info.member, att.attendanceDate) : false);
+
+    if (filterStatus === 'NOT_JOINED') {
+      if (!isNotJoined) return false;
+    } else if (filterStatus === 'ABSENT') {
+      if (isNotJoined || att.status !== 'ABSENT') return false;
+    } else if (filterStatus === 'PRESENT') {
+      if (isNotJoined || att.status !== 'PRESENT') return false;
+    } else if (filterStatus === 'EXCUSED') {
+      if (isNotJoined || att.status !== 'EXCUSED') return false;
+    }
+
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    const info = getMemberInfo(att.memberId);
     const memberName = info ? info.name.toLowerCase() : '';
     const memberMatric = info ? info.matric.toLowerCase() : '';
     const memberId = att.memberId.toLowerCase();
@@ -158,6 +180,7 @@ export const AttendanceHistoryTable: React.FC = () => {
               <option value="PRESENT">Present</option>
               <option value="ABSENT">Absent</option>
               <option value="EXCUSED">Excused</option>
+              <option value="NOT_JOINED">Not Joined</option>
             </select>
           </div>
         </div>
@@ -247,17 +270,29 @@ export const AttendanceHistoryTable: React.FC = () => {
 
                     {/* Status */}
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span
-                        className={`font-label-caps px-2.5 py-1 rounded-full font-bold text-xs ${
-                          att.status === 'PRESENT'
-                            ? 'bg-[#DCFCE7] text-[#166534]'
-                            : att.status === 'EXCUSED'
-                            ? 'bg-[#FEF3C7] text-[#92400E]'
-                            : 'bg-error-container text-on-error-container'
-                        }`}
-                      >
-                        {att.status}
-                      </span>
+                      {(() => {
+                        const isNotJoined =
+                          att.status === 'NOT_JOINED' ||
+                          (memberInfo?.member
+                            ? isMemberNotJoinedOnDate(memberInfo.member, att.attendanceDate)
+                            : false);
+
+                        return (
+                          <span
+                            className={`font-label-caps px-2.5 py-1 rounded-full font-bold text-xs ${
+                              isNotJoined
+                                ? 'bg-surface-container-high text-secondary border border-surface-container-highest'
+                                : att.status === 'PRESENT'
+                                ? 'bg-[#DCFCE7] text-[#166534]'
+                                : att.status === 'EXCUSED'
+                                ? 'bg-[#FEF3C7] text-[#92400E]'
+                                : 'bg-error-container text-on-error-container'
+                            }`}
+                          >
+                            {isNotJoined ? 'NOT JOINED' : att.status}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Recorded By */}

@@ -106,6 +106,11 @@ export const MemberTable: React.FC<MemberTableProps> = ({
                             {stats.daysPresent}P • {stats.daysExcused}E • {stats.daysAbsent}A
                           </span>
                         )}
+                        {stats && stats.daysNotJoined > 0 && (
+                          <span className="text-[10px] text-secondary/70">
+                            ({stats.daysNotJoined} prior sessions before joining)
+                          </span>
+                        )}
                       </div>
                     );
                   })()}

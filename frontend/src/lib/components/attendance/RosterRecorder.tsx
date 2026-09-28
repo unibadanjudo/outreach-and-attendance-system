@@ -5,6 +5,8 @@ import { formatDate } from '../../utils/formatters';
 import type { AttendanceStatus, Member } from '../../types';
 import {
   sortJudokas,
+  isMemberNotJoinedOnDate,
+  getMemberJoinDate,
   type AttendanceSortField,
   type SortDirection,
   type JudokaAttendanceStats,
@@ -186,39 +188,51 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
               <BeltBadge belt={member.beltRank} showKyu />
             </div>
 
-            {/* Status Button Toggles */}
-            <div className="flex items-center gap-1.5 self-end sm:self-auto">
-              <button
-                onClick={() => onStatusChange(member.id, 'PRESENT')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'PRESENT'
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                  }`}
-              >
-                <Check className="w-4 h-4" />
-                <span>Present</span>
-              </button>
-              <button
-                onClick={() => onStatusChange(member.id, 'ABSENT')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'ABSENT'
-                  ? 'bg-primary text-on-primary shadow-xs'
-                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                  }`}
-              >
-                <X className="w-4 h-4" />
-                <span>Absent</span>
-              </button>
-              <button
-                onClick={() => onStatusChange(member.id, 'EXCUSED')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'EXCUSED'
-                  ? 'bg-[#D97706] text-white shadow-xs'
-                  : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
-                  }`}
-              >
-                <Clock className="w-4 h-4" />
-                <span>Excused</span>
-              </button>
-            </div>
+            {/* Status Button Toggles or Not Joined Badge */}
+            {isMemberNotJoinedOnDate(member, date) ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high border border-surface-container-highest text-secondary text-xs font-label-caps font-bold self-end sm:self-auto shadow-xs">
+                <Clock className="w-3.5 h-3.5 text-secondary" />
+                <span>
+                  Not Joined
+                  {getMemberJoinDate(member)
+                    ? ` (Joined ${formatDate(getMemberJoinDate(member))})`
+                    : ''}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <button
+                  onClick={() => onStatusChange(member.id, 'PRESENT')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'PRESENT'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                    }`}
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Present</span>
+                </button>
+                <button
+                  onClick={() => onStatusChange(member.id, 'ABSENT')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'ABSENT'
+                    ? 'bg-primary text-on-primary shadow-xs'
+                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                    }`}
+                >
+                  <X className="w-4 h-4" />
+                  <span>Absent</span>
+                </button>
+                <button
+                  onClick={() => onStatusChange(member.id, 'EXCUSED')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-label-md font-bold transition-all cursor-pointer ${status === 'EXCUSED'
+                    ? 'bg-[#D97706] text-white shadow-xs'
+                    : 'bg-surface-container-low text-secondary hover:bg-surface-container hover:text-on-surface'
+                    }`}
+                >
+                  <Clock className="w-4 h-4" />
+                  <span>Excused</span>
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

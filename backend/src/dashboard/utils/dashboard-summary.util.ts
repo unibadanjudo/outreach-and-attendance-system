@@ -7,6 +7,8 @@ import { Outreach, OutreachStatus } from '../../outreach/models/outreach.model';
 import { DashboardSummaryDto } from '../dto/dashboard-summary-response.dto';
 import { calculateAttendanceDashboardMetrics } from './dashboard-attendance.util';
 
+import { formatToLagosDate } from '../../attendance/utils/attendance-date.util';
+
 export function calculateSummaryMetrics(
   members: Member[],
   attendances: Attendance[],
@@ -16,8 +18,14 @@ export function calculateSummaryMetrics(
   inactivityService: InactivityService,
   refDate: Date = new Date(),
 ): DashboardSummaryDto {
+  const todayLagos = formatToLagosDate(refDate);
+  const enrolledMembers = members.filter((m) => {
+    const joinDate = (m.createdAt ? m.createdAt.split('T')[0] : m.judoStartDate) || '';
+    return !joinDate || joinDate <= todayLagos;
+  });
+
   const summary: DashboardSummaryDto = {
-    totalMembers: members.length,
+    totalMembers: enrolledMembers.length,
     activeMembers: 0,
     recentlyInactiveMembers: 0,
     inactiveMembers: 0,
@@ -36,7 +44,7 @@ export function calculateSummaryMetrics(
     },
   };
 
-  for (const m of members) {
+  for (const m of enrolledMembers) {
     const idKey = m.id.trim().toLowerCase();
     const phoneKey = m.phoneNumber ? m.phoneNumber.trim().toLowerCase() : '';
     const an =
