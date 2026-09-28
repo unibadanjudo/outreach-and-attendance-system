@@ -23,6 +23,7 @@ export interface Attendance {
   recordedBy: string;
   notes?: string;
   createdAt: string;
+  attendanceTaken?: boolean;
 }
 
 export interface CreateAttendanceDto {
@@ -32,6 +33,7 @@ export interface CreateAttendanceDto {
   status: AttendanceStatus;
   notes?: string;
   isCorrection?: boolean;
+  attendanceTaken?: boolean;
 }
 
 export interface BatchCreateAttendanceDto {

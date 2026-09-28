@@ -4,15 +4,18 @@ import { ChevronRight } from 'lucide-react';
 import { BeltBadge } from '../common/Badge';
 import { formatPhone } from '../../utils/formatters';
 import type { Member } from '../../types';
+import type { JudokaAttendanceStats } from '../../utils/attendance-stats.util';
 
 interface MemberTableProps {
   members: Member[];
+  statsMap?: Map<string, JudokaAttendanceStats>;
   onEditMember?: (member: Member) => void;
   onEditBeltRank?: (member: Member) => void;
 }
 
 export const MemberTable: React.FC<MemberTableProps> = ({
   members,
+  statsMap,
   onEditMember,
   onEditBeltRank,
 }) => {
@@ -26,6 +29,7 @@ export const MemberTable: React.FC<MemberTableProps> = ({
             <tr className="bg-surface-container-low text-secondary font-label-caps tracking-wider uppercase">
               <th className="py-3 px-4">Judoka</th>
               <th className="py-3 px-4">Belt Rank</th>
+              <th className="py-3 px-4">Attendance</th>
               <th className="py-3 px-4">Faculty / Dept</th>
               <th className="py-3 px-4">Matric / Phone</th>
               <th className="py-3 px-4 text-right">Actions</th>
@@ -73,6 +77,32 @@ export const MemberTable: React.FC<MemberTableProps> = ({
                       </button>
                     )}
                   </div>
+                </td>
+                <td className="py-3.5 px-4 whitespace-nowrap">
+                  {(() => {
+                    const stats =
+                      statsMap?.get(member.id) ||
+                      statsMap?.get(member.id.toLowerCase());
+                    const ratio = stats?.ratioString || '0days/0';
+                    const pct = stats?.percentage || 0;
+                    return (
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-label-caps font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                            {ratio}
+                          </span>
+                          <span className="text-[11px] text-secondary font-mono">
+                            {pct}%
+                          </span>
+                        </div>
+                        {stats && stats.totalTakenDays > 0 && (
+                          <span className="text-[10px] text-secondary">
+                            {stats.daysPresent}P • {stats.daysExcused}E • {stats.daysAbsent}A
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="py-3.5 px-4">
                   <span className="text-on-surface font-medium">

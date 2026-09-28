@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMembersList } from '../../lib/hooks/useMembers';
+import { useAttendanceList } from '../../lib/hooks/useAttendance';
 import { useAuthStore } from '../../lib/stores/useAuthStore';
 import { canManageMembers } from '../../lib/types/auth.types';
 import { MemberFilters } from '../../lib/components/members/MemberFilters';
@@ -11,6 +12,12 @@ import { EmptyState } from '../../lib/components/common/EmptyState';
 import { Button } from '../../lib/components/common/Button';
 import { Pagination } from '../../lib/components/common/Pagination';
 import type { Member } from '../../lib/types';
+import {
+  calculateAttendanceStats,
+  sortJudokas,
+  type AttendanceSortField,
+  type SortDirection,
+} from '../../lib/utils/attendance-stats.util';
 
 export const MembersPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -20,6 +27,8 @@ export const MembersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [faculty, setFaculty] = useState('ALL');
   const [status, setStatus] = useState('ALL');
+  const [sortBy, setSortBy] = useState<AttendanceSortField>('name');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [rankingMember, setRankingMember] = useState<Member | null>(null);
 
@@ -30,6 +39,20 @@ export const MembersPage: React.FC = () => {
     faculty: faculty !== 'ALL' ? faculty : undefined,
     status: status !== 'ALL' ? status : undefined,
   });
+
+  const { data: attendanceData } = useAttendanceList({ limit: 1000 });
+
+  const { statsMap } = useMemo(
+    () => calculateAttendanceStats(attendanceData?.items || [], data?.items || []),
+    [attendanceData, data?.items],
+  );
+
+  const sortedMembers = useMemo(() => {
+    if (!data?.items) return [];
+    const wrapped = data.items.map((m) => ({ member: m }));
+    const sorted = sortJudokas(wrapped, sortBy, sortDir, statsMap);
+    return sorted.map((w) => w.member);
+  }, [data?.items, sortBy, sortDir, statsMap]);
 
   const total = data?.total ?? data?.meta?.total ?? 0;
   const totalPages = data?.totalPages ?? data?.meta?.totalPages ?? (Math.ceil(total / limit) || 1);
@@ -77,6 +100,10 @@ export const MembersPage: React.FC = () => {
         onFacultyChange={updateFilter(setFaculty)}
         status={status}
         onStatusChange={updateFilter(setStatus)}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
       />
 
       {/* Roster Table Content */}
@@ -112,7 +139,8 @@ export const MembersPage: React.FC = () => {
       ) : (
         <div className="flex flex-col gap-4">
           <MemberTable
-            members={data.items}
+            members={sortedMembers}
+            statsMap={statsMap}
             onEditMember={canManage ? setEditingMember : undefined}
             onEditBeltRank={canManage ? setRankingMember : undefined}
           />

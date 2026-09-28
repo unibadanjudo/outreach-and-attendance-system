@@ -13,6 +13,7 @@ export const ATTENDANCE_SHEET_HEADERS = [
   'Recorded By',
   'Notes',
   'Created At',
+  'Attendance Taken',
 ];
 
 export type AttendanceField = keyof Attendance;
@@ -36,6 +37,8 @@ export const HEADER_ALIASES: Record<string, AttendanceField> = {
   note: 'notes',
   createdat: 'createdAt',
   timestamp: 'createdAt',
+  attendancetaken: 'attendanceTaken',
+  taken: 'attendanceTaken',
 };
 
 export function mapHeadersToAttendanceKeys(
@@ -73,6 +76,12 @@ export function rowToAttendance(
       )
         ? (upper as TrainingSession)
         : TrainingSession.GENERAL;
+    } else if (key === 'attendanceTaken') {
+      if (value) {
+        const upper = value.toUpperCase();
+        record.attendanceTaken =
+          upper === 'TRUE' || upper === 'YES' || upper === '1';
+      }
     } else {
       (record as Record<string, unknown>)[key] = value;
     }
@@ -87,6 +96,7 @@ export function rowToAttendance(
     recordedBy: record.recordedBy || 'system',
     notes: record.notes || '',
     createdAt: record.createdAt || new Date().toISOString(),
+    attendanceTaken: record.attendanceTaken,
   };
 }
 
@@ -100,5 +110,6 @@ export function attendanceToRow(attendance: Attendance): string[] {
     attendance.recordedBy,
     attendance.notes || '',
     attendance.createdAt,
+    attendance.attendanceTaken ? 'TRUE' : 'FALSE',
   ];
 }

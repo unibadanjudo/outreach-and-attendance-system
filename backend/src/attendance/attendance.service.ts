@@ -22,6 +22,7 @@ import {
 } from './repositories/attendance.repository.interface';
 import { getLagosCurrentDate } from './utils/attendance-date.util';
 import { filterAndPaginateAttendance } from './utils/attendance-query.util';
+import { resolveAttendanceTakenList } from './utils/attendance-taken.util';
 
 @Injectable()
 export class AttendanceService {
@@ -56,6 +57,7 @@ export class AttendanceService {
         status: dto.status || AttendanceStatus.PRESENT,
         notes: dto.notes,
         recordedBy,
+        attendanceTaken: dto.attendanceTaken ?? true,
       });
     }
 
@@ -69,6 +71,7 @@ export class AttendanceService {
       recordedBy,
       notes: dto.notes || '',
       createdAt: new Date().toISOString(),
+      attendanceTaken: dto.attendanceTaken ?? true,
     };
 
     return this.attendanceRepository.create(newRecord);
@@ -89,13 +92,15 @@ export class AttendanceService {
       recordedBy,
       notes: r.notes || '',
       createdAt: now,
+      attendanceTaken: r.attendanceTaken ?? true,
     }));
 
     return this.attendanceRepository.batchUpsert(recordsToUpsert);
   }
 
   async findAll(query: QueryAttendanceDto): Promise<PaginatedAttendanceDto> {
-    const records = await this.attendanceRepository.findAll();
+    const raw = await this.attendanceRepository.findAll();
+    const records = resolveAttendanceTakenList(raw);
     return filterAndPaginateAttendance(records, query);
   }
 
@@ -111,7 +116,8 @@ export class AttendanceService {
 
   async findByMemberId(memberId: string): Promise<Attendance[]> {
     const member = await this.membersService.findById(memberId);
-    const records = await this.attendanceRepository.findByMemberId(member.id);
+    const raw = await this.attendanceRepository.findByMemberId(member.id);
+    const records = resolveAttendanceTakenList(raw);
     return records.sort((a, b) =>
       b.attendanceDate.localeCompare(a.attendanceDate),
     );

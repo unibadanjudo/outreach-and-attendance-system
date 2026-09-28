@@ -29,4 +29,5 @@ export interface Attendance {
   recordedBy: string;
   notes?: string;
   createdAt: string;
+  attendanceTaken?: boolean;
 }

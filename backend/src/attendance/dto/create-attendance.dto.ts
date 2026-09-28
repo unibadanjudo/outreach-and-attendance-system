@@ -65,4 +65,12 @@ export class CreateAttendanceDto {
   @IsOptional()
   @IsBoolean()
   isCorrection?: boolean = false;
+
+  @ApiPropertyOptional({
+    description: 'Whether attendance was taken for this session',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  attendanceTaken?: boolean;
 }

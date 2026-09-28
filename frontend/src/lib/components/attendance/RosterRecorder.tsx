@@ -3,6 +3,12 @@ import { Search, Check, X, Clock, Calendar } from 'lucide-react';
 import { BeltBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatters';
 import type { AttendanceStatus, Member } from '../../types';
+import {
+  sortJudokas,
+  type AttendanceSortField,
+  type SortDirection,
+  type JudokaAttendanceStats,
+} from '../../utils/attendance-stats.util';
 
 const isValidNickname = (nickname?: string | null): nickname is string => {
   if (!nickname) return false;
@@ -18,6 +24,7 @@ interface RosterItem {
 interface RosterRecorderProps {
   roster: RosterItem[];
   date?: string;
+  statsMap?: Map<string, JudokaAttendanceStats>;
   onStatusChange: (memberId: string, status: AttendanceStatus) => void;
   onMarkAllPresent: () => void;
 }
@@ -25,11 +32,14 @@ interface RosterRecorderProps {
 export const RosterRecorder: React.FC<RosterRecorderProps> = ({
   roster,
   date,
+  statsMap,
   onStatusChange,
   onMarkAllPresent,
 }) => {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'ALL' | 'PRESENT' | 'ABSENT' | 'EXCUSED'>('ALL');
+  const [sortBy, setSortBy] = useState<AttendanceSortField>('name');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
 
   const filtered = roster.filter((item) => {
     if (tab !== 'ALL' && item.status !== tab) return false;
@@ -42,6 +52,8 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
     }
     return true;
   });
+
+  const sortedRoster = sortJudokas(filtered, sortBy, sortDir, statsMap);
 
   return (
     <section className="bg-surface-container-lowest rounded-xl shadow-xs border border-surface-container-low overflow-hidden flex flex-col">
@@ -64,6 +76,31 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
               <span className="font-bold">{formatDate(date)}</span>
             </div>
           )}
+
+          {/* Sort selector */}
+          <div className="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-lg border border-surface-container-high shadow-xs">
+            <span className="font-label-caps text-secondary text-[10px] font-bold">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as AttendanceSortField)}
+              className="bg-transparent text-on-surface font-label-md text-xs outline-none cursor-pointer"
+            >
+              <option value="name">Name</option>
+              <option value="startDate">Start Date</option>
+              <option value="belt">Belt Rank</option>
+              <option value="daysPresent">Days Present</option>
+              <option value="daysExcused">Days Excused</option>
+              <option value="daysAbsent">Days Absent</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              className="px-1 text-secondary hover:text-primary font-bold text-xs cursor-pointer"
+              title={sortDir === 'asc' ? 'Ascending (Click for Descending)' : 'Descending (Click for Ascending)'}
+            >
+              {sortDir === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
 
           {/* Tabs */}
           <div className="flex items-center gap-1 bg-surface-container-lowest p-1 rounded-lg border border-surface-container-high">
@@ -92,7 +129,7 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
 
       {/* Roster List */}
       <div className="divide-y divide-surface-container-low">
-        {filtered.map(({ member, status }) => (
+        {sortedRoster.map(({ member, status }) => (
           <div
             key={member.id}
             className="p-3.5 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-container-low/40 transition-colors"
@@ -115,7 +152,24 @@ export const RosterRecorder: React.FC<RosterRecorderProps> = ({
                   {member.facultyDepartment} • {member.matricNumber || member.phoneNumber}
                 </span>
 
-
+                {statsMap && (() => {
+                  const stats =
+                    statsMap.get(member.id) ||
+                    statsMap.get(member.id.toLowerCase());
+                  if (!stats) return null;
+                  return (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="font-label-caps text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                        {stats.ratioString}
+                      </span>
+                      {stats.totalTakenDays > 0 && (
+                        <span className="text-[10px] text-secondary">
+                          {stats.daysPresent}P • {stats.daysExcused}E • {stats.daysAbsent}A
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {date && (
                   <span className="font-label-caps text-[10px] text-primary/80 flex items-center gap-1 mt-0.5">

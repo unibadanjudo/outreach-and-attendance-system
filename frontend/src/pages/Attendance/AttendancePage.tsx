@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../lib/stores/useAuthStore';
@@ -12,6 +12,7 @@ import { RosterRecorder } from '../../lib/components/attendance/RosterRecorder';
 import { AttendanceHistoryTable } from '../../lib/components/attendance/AttendanceHistoryTable';
 import { LoadingSkeleton } from '../../lib/components/common/LoadingSkeleton';
 import type { AttendanceStatus, CreateAttendanceDto } from '../../lib/types';
+import { calculateAttendanceStats } from '../../lib/utils/attendance-stats.util';
 
 function getDefaultSessionForDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -62,6 +63,13 @@ export const AttendancePage: React.FC = () => {
     session,
     limit: 500,
   });
+
+  const { data: allAttendanceData } = useAttendanceList({ limit: 1000 });
+
+  const { statsMap } = useMemo(
+    () => calculateAttendanceStats(allAttendanceData?.items || [], membersData?.items || []),
+    [allAttendanceData, membersData],
+  );
 
   const batchMutation = useBatchRecordAttendance();
 
@@ -151,13 +159,14 @@ export const AttendancePage: React.FC = () => {
   const excusedCount = rosterItems.filter((i) => i.status === 'EXCUSED').length;
 
   const handleSaveSession = async () => {
-    if (!rosterItems.length) return;
+    const isTaken = presentCount > 0 || session === 'NO_TRAINING';
     const records: CreateAttendanceDto[] = rosterItems.map((item) => ({
       memberId: item.member.id,
       attendanceDate: date,
       trainingSession: session,
       status: item.status,
       isCorrection: true,
+      attendanceTaken: isTaken,
       notes: session === 'NO_TRAINING'
         ? 'Training session did not hold today'
         : 'Recorded via Dojo Command mat console',
@@ -276,6 +285,7 @@ export const AttendancePage: React.FC = () => {
           <RosterRecorder
             roster={rosterItems}
             date={date}
+            statsMap={statsMap}
             onStatusChange={handleStatusChange}
             onMarkAllPresent={handleMarkAllPresent}
           />

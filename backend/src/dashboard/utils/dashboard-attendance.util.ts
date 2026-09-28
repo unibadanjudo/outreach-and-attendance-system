@@ -9,13 +9,17 @@ import {
   DailyAttendanceItemDto,
   DashboardAttendanceDto,
 } from '../dto/dashboard-attendance-response.dto';
+import { resolveAttendanceTakenList } from '../../attendance/utils/attendance-taken.util';
 
 export function calculateAttendanceDashboardMetrics(
   records: Attendance[],
   refDate: Date = new Date(),
 ): DashboardAttendanceDto {
   const todayStr = formatToLagosDate(refDate);
-  const totalRecords = records.length;
+  const validRecords = resolveAttendanceTakenList(records).filter(
+    (r) => r.attendanceTaken !== false,
+  );
+  const totalRecords = validRecords.length;
   let totalPresent = 0;
   let totalAbsent = 0;
   let totalExcused = 0;
@@ -34,7 +38,7 @@ export function calculateAttendanceDashboardMetrics(
 
   const sessionsCounted = new Set<string>();
 
-  for (const r of records) {
+  for (const r of validRecords) {
     const status = String(r.status || '').toUpperCase();
     const sess = r.trainingSession || TrainingSession.GENERAL;
     sessionBreakdown[sess] = (sessionBreakdown[sess] || 0) + 1;

@@ -24,6 +24,7 @@ describe('AttendanceRowMapper', () => {
       'recordedBy',
       'notes',
       'createdAt',
+      'attendanceTaken',
     ]);
   });
 
@@ -37,6 +38,7 @@ describe('AttendanceRowMapper', () => {
       'coach@uijudo.club',
       'Great randori session',
       '2026-09-13T18:00:00.000Z',
+      'TRUE',
     ];
 
     const result = rowToAttendance(headerKeys, row, 2);
@@ -50,6 +52,7 @@ describe('AttendanceRowMapper', () => {
       recordedBy: 'coach@uijudo.club',
       notes: 'Great randori session',
       createdAt: '2026-09-13T18:00:00.000Z',
+      attendanceTaken: true,
     });
   });
 
@@ -67,6 +70,7 @@ describe('AttendanceRowMapper', () => {
     expect(result.trainingSession).toBe(TrainingSession.GENERAL);
     expect(result.status).toBe(AttendanceStatus.PRESENT);
     expect(result.recordedBy).toBe('system');
+    expect(result.attendanceTaken).toBeUndefined();
   });
 
   it('should serialize an Attendance model into a spreadsheet row array', () => {
@@ -79,6 +83,7 @@ describe('AttendanceRowMapper', () => {
       recordedBy: 'admin@uijudo.club',
       notes: 'Injured finger',
       createdAt: '2026-09-14T09:00:00.000Z',
+      attendanceTaken: true,
     };
 
     const row = attendanceToRow(attendance);
@@ -91,6 +96,7 @@ describe('AttendanceRowMapper', () => {
       'admin@uijudo.club',
       'Injured finger',
       '2026-09-14T09:00:00.000Z',
+      'TRUE',
     ]);
   });
 });

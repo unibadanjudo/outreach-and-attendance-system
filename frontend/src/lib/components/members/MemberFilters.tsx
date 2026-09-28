@@ -1,6 +1,8 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 
+import type { AttendanceSortField, SortDirection } from '../../utils/attendance-stats.util';
+
 interface MemberFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -8,6 +10,10 @@ interface MemberFiltersProps {
   onFacultyChange: (value: string) => void;
   status: string;
   onStatusChange: (value: string) => void;
+  sortBy?: AttendanceSortField;
+  onSortByChange?: (val: AttendanceSortField) => void;
+  sortDir?: SortDirection;
+  onSortDirChange?: (val: SortDirection) => void;
 }
 
 export const MemberFilters: React.FC<MemberFiltersProps> = ({
@@ -17,6 +23,10 @@ export const MemberFilters: React.FC<MemberFiltersProps> = ({
   onFacultyChange,
   status,
   onStatusChange,
+  sortBy = 'name',
+  onSortByChange,
+  sortDir = 'asc',
+  onSortDirChange,
 }) => {
   const faculties = [
     'ALL',
@@ -88,6 +98,39 @@ export const MemberFilters: React.FC<MemberFiltersProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Sort Field & Order */}
+        {onSortByChange && (
+          <div className="flex flex-col gap-1">
+            <label className="font-label-caps uppercase text-secondary font-bold text-[11px]">
+              Sort Judokas
+            </label>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={sortBy}
+                onChange={(e) => onSortByChange(e.target.value as AttendanceSortField)}
+                className="flex-1 bg-surface-container-low text-on-surface font-label-md px-2.5 py-2 rounded-lg outline-none cursor-pointer border border-transparent focus:border-primary text-xs"
+              >
+                <option value="name">Name</option>
+                <option value="startDate">Start Date</option>
+                <option value="belt">Belt Rank</option>
+                <option value="daysPresent">Days Present</option>
+                <option value="daysExcused">Days Excused</option>
+                <option value="daysAbsent">Days Absent</option>
+              </select>
+              {onSortDirChange && (
+                <button
+                  type="button"
+                  onClick={() => onSortDirChange(sortDir === 'asc' ? 'desc' : 'asc')}
+                  className="px-2.5 py-2 bg-surface-container-low text-secondary hover:text-primary rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                  title={sortDir === 'asc' ? 'Ascending (Click for Descending)' : 'Descending (Click for Ascending)'}
+                >
+                  {sortDir === 'asc' ? 'ASC ↑' : 'DESC ↓'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
